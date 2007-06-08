@@ -190,7 +190,9 @@ then
   else
     OFLAGS="-g"
   fi
-  EXT=pd_linux	
+  OFLAGS="$OFLAGS -fPIC"
+  DFLAGS="$DFLAGS -DPIC"
+  EXT=pd_linux
 fi
 
 if test `uname -m` = alpha; 

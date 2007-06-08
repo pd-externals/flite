@@ -62,6 +62,10 @@ Specify PD base directory.
 Whether to enable verbose debugging messages.
 Default=no.
 
+=item * Environment Variables
+
+CPPFLAGS, CFLAGS, LDFLAGS, etc.
+
 =back
 
 See the output of './configure --help' for more options.
