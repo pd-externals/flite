@@ -27,7 +27,7 @@ PD_DIR = @PD_DIR@
 PD_INC = @PD_INC@
 PD_DOCDIR = @PD_DOC@
 PD_EXTDIR = @PD_EXTDIR@
-EXT    = @EXT@
+PDEXT     = @EXT@
 
 #-----------------------------------------------------------------------
 # pd externals (hacked 'libexec_*')
