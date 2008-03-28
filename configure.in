@@ -86,38 +86,58 @@ AC_SUBST(PD_DOCDIR)
 
 
 dnl
-dnl flite-directory
+dnl flite source directory
 dnl 
 AC_ARG_WITH(flite-dir,
 	AC_HELP_STRING([--with-flite-dir=DIR], [Flite base directory (default=/usr/local/lib/flite-1.1-release)]),
-	[FLITE_DIR="$withval"],
-	[FLITE_DIR="/usr/local/lib/flite-1.1-release"])
-AC_SUBST(FLITE_DIR)
-IFLAGS="$IFLAGS -I${FLITE_DIR}/include"
-LFLAGS="$LFLAGS -L${FLITE_DIR}/lib"
+	[FLITE_DIR="$withval"]
+	)
+if test -n "$FLITE_DIR"; then
+  FLITE_INCDIR="${FLITE_DIR}/include"
+  FLITE_LIBDIR="${FLITE_DIR}/lib"
+  #IFLAGS="$IFLAGS -I${FLITE_DIR}/include"
+  #LFLAGS="$LFLAGS -L${FLITE_DIR}/lib"
+fi
 
-dnl
-dnl Check for flite : headers
-dnl
+##-- check: headers
 UCPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$UCPPFLAGS $IFLAGS"
-for h in flite.h ; do
-  AC_CHECK_HEADER($h,[pdflite_have_header="yes"],[pdflite_have_header="no"],[ ])
-  if test "$pdflite_have_header" = "no" ; then
-    AC_MSG_ERROR([required header 'flite.h' not found -- quitting],1)
+if test -z "$FLITE_INCDIR"; then
+  for d_base in /usr /usr/local /sw ; do
+    for d_sub in 'include' 'include/flite' 'flite' 'flite/include' ; do
+      d="${d_base}/${d_sub}"
+      CPPFLAGS="$UCPPFLAGS -I$d"
+      AC_CHECK_HEADER($d/flite.h,[FLITE_INCDIR="$d"; break],[],[ ])
+    done
+    if test -n "$FLITE_INCDIR"; then break; fi
+  done
+  ##-- flite.h: final check
+  if test -z "$FLITE_INCDIR"; then
+    AC_MSG_ERROR([Required header 'flite.h' not found: aborting],1)
   fi
-done
-CPPFLAGS="$UCPPFLAGS"
+  IFLAGS="$IFLAGS -I${FLITE_INCDIR}"
+fi
+##--/FLITE_INCDIR
 
-dnl
-dnl Check for flite : libs : flite
-dnl
-LDFLAGS="$ULDFLAGS $LFLAGS"
-LIBS="$LIBS -lm"
-AC_CHECK_LIB(flite,[flite_init],[],
-	[AC_MSG_ERROR([required library 'libflite.a' not found -- quitting],1)],
-	[-lm])
-LDFLAGS="$ULDFLAGS"
+##-- check libs: libflite.a
+ULDFLAGS="$LDFLAGS"
+if test -z "$FLITE_LIBDIR"; then
+  for d_base in /usr /usr/local /sw ; do
+    for d_sub in 'lib' 'lib/flite' 'flite' 'flite/lib' ; do
+      d="${d_base}/${d_sub}"
+      LDFLAGS="$ULDFLAGS -L$d"
+      AC_CHECK_LIB(flite,[flite_init],[FLITE_LIBDIR="$d"; break],[],[-lm])
+    done
+    if test -n "$FLITE_LIBDIR"; then break; fi
+  done
+  ##-- libflite.a: final check
+  if test -z "$FLITE_LIBDIR"; then
+    AC_MSG_ERROR([Required library 'flite' not found: aborting],1)
+  fi
+  LFLAGS="$LFLAGS -L${FLITE_LIBDIR}"
+fi
+##--/FLITE_LIBDIR
+
+##-- flite: libs: base
 FLITE_LIBS="-lflite -lm"
 AC_SUBST(FLITE_LIBS)
 
@@ -126,7 +146,7 @@ dnl Check for flite : libs : flite_cmulex
 dnl
 LDFLAGS="$ULDFLAGS $LFLAGS"
 AC_CHECK_LIB(flite_cmulex,[cmu_lex_init],[],
-	[AC_MSG_ERROR([required library 'libflite_cmulex.a' not found -- quitting],1)],
+	[AC_MSG_ERROR([required library 'flite_cmulex' not found -- quitting],1)],
 	[-lflite -lm])
 FLITE_LEXLIBS="-lflite_cmulex"
 AC_SUBST(FLITE_LEXLIBS)
@@ -136,7 +156,7 @@ dnl Check for flite : libs : flite_usenglish
 dnl
 LDFLAGS="$ULDFLAGS $LFLAGS"
 AC_CHECK_LIB(flite_usenglish,[usenglish_init],[],
-	[AC_MSG_ERROR([required library 'libflite_usenglish.a' not found -- quitting],1)],
+	[AC_MSG_ERROR([required library 'flite_usenglish' not found -- quitting],1)],
 	[-lflite_cmulex -lflite -lm])
 FLITE_LANGLIBS="-lflite_usenglish"
 AC_SUBST(FLITE_LANGLIBS)
@@ -145,7 +165,7 @@ dnl Check for flite : libs : flite_cmu_us_kal16
 dnl
 LDFLAGS="$ULDFLAGS $LFLAGS"
 AC_CHECK_LIB(flite_cmu_us_kal16,[register_cmu_us_kal],[],
-	[AC_MSG_ERROR([required library 'libflite_cmu_us_kal16.a' not found -- quitting],1)],
+	[AC_MSG_ERROR([required library 'flite_cmu_us_kal16' not found -- quitting],1)],
 	[-lflite_usenglish -lflite_cmulex -lflite -lm])
 FLITE_VOICELIBS="-lflite_cmu_us_kal16"
 AC_SUBST(FLITE_VOICELIBS)
@@ -187,7 +207,7 @@ then
   LFLAGS="$LFLAGS -export_dynamic -shared"
   if test "$DEBUG" = "no"; then
     #OFLAGS="-O6 -funroll-loops -fomit-frame-pointer"
-    OFLAGS="-O3 -funroll-loops -fomit-frame-pointer -pipe"
+    OFLAGS="-O3 -pipe"
   else
     OFLAGS="-g"
   fi
@@ -238,8 +258,9 @@ fi
 dnl
 dnl Restore user flags
 dnl
-LDFLAGS="$ULDFLAGS"
+CPPFLAGS="$UCPPFLAGS"
 CFLAGS="$UCFLAGS"
+LDFLAGS="$ULDFLAGS"
 LIBS="$ULIBS"
 
 AC_OUTPUT(config/Makefile Makefile)
