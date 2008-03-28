@@ -1,7 +1,13 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl -- adapted from 'configure.in' in ggee distribution by Guenter Geiger
 AC_PREREQ(2.5)
-AC_INIT(pd-flite, [0.01], [moocow@ling.uni-potsdam.de])
+
+dnl Some handy macros
+define([THE_PACKAGE_NAME],    [pdflite])
+define([THE_PACKAGE_VERSION], [0.02])
+define([THE_PACKAGE_AUTHOR],  [moocow@ling.uni-potsdam.de])
+
+AC_INIT(THE_PACKAGE_NAME, THE_PACKAGE_VERSION, THE_PACKAGE_AUTHOR)
 
 dnl
 dnl source & aux
@@ -11,7 +17,7 @@ AC_CONFIG_AUX_DIR(config)
 dnl
 dnl use automake
 dnl
-AM_INIT_AUTOMAKE(pd-flite, [0.01])
+AM_INIT_AUTOMAKE(THE_PACKAGE_NAME, THE_PACKAGE_VERSION)
 
 dnl
 dnl use autoheader
@@ -23,9 +29,8 @@ dnl default prefix (== pd-dir)
 dnl
 AC_PREFIX_DEFAULT(/usr/local/lib/pd)
 
-dnl
-dnl Save user flags
-dnl
+##-- save user *FLAGS
+UCPPFLAGS="$CPPFLAGS"
 UCFLAGS="$CFLAGS"
 ULDFLAGS="$LDFLAGS"
 ULIBS="$LIBS"
@@ -53,6 +58,13 @@ AC_SUBST(PACKAGE_VERSION)
 AC_SUBST(PACKAGE_NAME)
 AC_SUBST(BUGREPORT)
 
+##-- banner stuff
+compiled_by="${LOGNAME:-${USER:-(unknown)}}"
+compiled_on="`date`"
+test -z "$compiled_on" && compiled_on="?"
+
+AC_DEFINE_UNQUOTED(PDFLITE_COMPILED_BY, "$compiled_by", [User who compiled this external])
+AC_DEFINE_UNQUOTED(PDFLITE_COMPILED_ON, "$compiled_on", [When this external was compiled])
 
 dnl
 dnl pd-directory/ies
@@ -89,53 +101,48 @@ dnl
 dnl flite source directory
 dnl 
 AC_ARG_WITH(flite-dir,
-	AC_HELP_STRING([--with-flite-dir=DIR], [Flite base directory (default=/usr/local/lib/flite-1.1-release)]),
-	[FLITE_DIR="$withval"]
+	AC_HELP_STRING([--with-flite-dir=DIR], [Flite source directory (default=none)]),
+	[FLITE_DIR="$withval"],
 	)
 if test -n "$FLITE_DIR"; then
-  FLITE_INCDIR="${FLITE_DIR}/include"
-  FLITE_LIBDIR="${FLITE_DIR}/lib"
-  #IFLAGS="$IFLAGS -I${FLITE_DIR}/include"
-  #LFLAGS="$LFLAGS -L${FLITE_DIR}/lib"
+  IFLAGS="$IFLAGS -I${FLITE_DIR}/include"
+  LFLAGS="$LFLAGS -L${FLITE_DIR}/lib"
 fi
 
-##-- check: headers
-UCPPFLAGS="$CPPFLAGS"
-if test -z "$FLITE_INCDIR"; then
-  for d_base in /usr /usr/local /sw ; do
-    for d_sub in 'include' 'include/flite' 'flite' 'flite/include' ; do
-      d="${d_base}/${d_sub}"
-      CPPFLAGS="$UCPPFLAGS -I$d"
-      AC_CHECK_HEADER($d/flite.h,[FLITE_INCDIR="$d"; break],[],[ ])
-    done
-    if test -n "$FLITE_INCDIR"; then break; fi
-  done
-  ##-- flite.h: final check
-  if test -z "$FLITE_INCDIR"; then
-    AC_MSG_ERROR([Required header 'flite.h' not found: aborting],1)
-  fi
-  IFLAGS="$IFLAGS -I${FLITE_INCDIR}"
+##-- check: headers: flite.h
+CPPFLAGS="$UCPPFLAGS $IFLAGS"
+AC_CHECK_HEADER([flite/flite.h],[pdflite_have_header=yes],[pdflite_have_header=no],[ ])
+if test "$pdflite_have_header" != "yes"; then
+  AC_MSG_WARN([Required header 'flite.h' not found])
+  AC_MSG_WARN([- is the directory containing 'flite.h' in your CPPFLAGS variable?])
+  AC_MSG_ERROR([Required header not found: aborting],1)
 fi
-##--/FLITE_INCDIR
 
 ##-- check libs: libflite.a
-ULDFLAGS="$LDFLAGS"
-if test -z "$FLITE_LIBDIR"; then
-  for d_base in /usr /usr/local /sw ; do
-    for d_sub in 'lib' 'lib/flite' 'flite' 'flite/lib' ; do
-      d="${d_base}/${d_sub}"
-      LDFLAGS="$ULDFLAGS -L$d"
-      AC_CHECK_LIB(flite,[flite_init],[FLITE_LIBDIR="$d"; break],[],[-lm])
-    done
-    if test -n "$FLITE_LIBDIR"; then break; fi
+LDFLAGS="$ULDFLAGS $LFLAGS"
+AC_CHECK_LIB(flite,[flite_init],[pdflite_have_lib=yes],[pdflite_have_lib=no],[-lm])
+if test "$pdflite_have_lib" != "yes"; then
+  for d in \
+    /usr/lib /usr/local/lib /sw/lib \
+    /usr/lib/flite /usr/local/lib/flite /sw/lib/flite \
+    /usr/flite/lib /usr/local/flite/lib /sw/flite/lib \
+    /usr/lib/flite/lib /usr/local/lib/flite/lib /sw/lib/flite/lib
+  do
+    LDFLAGS="$ULDFLAGS $LFLAGS -L$d"
+    AC_CHECK_LIB(flite,[flite_init],[pdflite_have_lib=yes],[pdflite_have_lib=no],[-lm])
+    if test "$pdflite_have_lib" = "yes"; then
+      LFLAGS="$LFLAGS -L$d"
+      break
+    fi
   done
+  ##
   ##-- libflite.a: final check
-  if test -z "$FLITE_LIBDIR"; then
-    AC_MSG_ERROR([Required library 'flite' not found: aborting],1)
+  if test "$pdflite_have_lib" != "yes"; then
+    AC_MSG_WARN([Required library 'flite' not found])
+    AC_MSG_WARN([- is the directory containing the 'flite' library in your LDFLAGS variable?])
+    AC_MSG_ERROR([Required library not found: aborting],1)
   fi
-  LFLAGS="$LFLAGS -L${FLITE_LIBDIR}"
 fi
-##--/FLITE_LIBDIR
 
 ##-- flite: libs: base
 FLITE_LIBS="-lflite -lm"

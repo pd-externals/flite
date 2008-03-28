@@ -22,8 +22,8 @@
 #endif
 
 #include <math.h>
-#include <flite.h>
-#include <cst_wave.h>
+#include <flite/flite.h>
+#include "flite/cst_wave.h"
 
 /*--------------------------------------------------------------------
  * DEBUG
@@ -45,8 +45,10 @@ static cst_voice *voice;
  * Structures and Types
  *=====================================================================*/
 
-static char *flite_description =
-  "flite: Text-to-Speech external v%s by Bryan Jurish";
+static const char *flite_description =
+  "flite: Text-to-Speech external v" PACKAGE_VERSION " by Bryan Jurish\n"
+  "flite: compiled on " PDFLITE_COMPILED_ON " by " PDFLITE_COMPILED_BY "\n"
+  ;
 //static char *flite_acknowledge = "flite: based on code by ";
 //static char *flite_version = "flite: PD external v%s by Bryan Jurish";
 
@@ -237,7 +239,7 @@ static void flite_free(t_flite *x) {
  *--------------------------------------------------------------------*/
 void flite_setup(void) {
   post("");
-  post(flite_description, PACKAGE_VERSION);
+  post(flite_description);
   post("");
 
   // --- setup synth
@@ -260,5 +262,5 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_synth, gensym("synth"), 0);
 
   // --- help patch
-  class_sethelpsymbol(flite_class, gensym("flite-help.pd"));
+  //class_sethelpsymbol(flite_class, gensym("flite-help.pd")); /* breaks pd-extended help lookup */
 }
