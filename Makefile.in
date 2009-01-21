@@ -221,7 +221,7 @@ data_DATA = flite-help.pd
 #-----------------------------------------------------------------------
 # sources
 #-----------------------------------------------------------------------
-flite_SOURCES = flite.c
+flite_SOURCES = flite.c mooPdUtils.h
 AM_CPPFLAGS = $(DEFS) $(IFLAGS) $(DFLAGS)
 AM_CFLAGS = $(OFLAGS) $(WFLAGS) $(AFLAGS)
 flite_LDFLAGS = $(LFLAGS)

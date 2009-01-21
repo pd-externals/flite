@@ -10,6 +10,7 @@
 
 
 #include <m_pd.h>
+#include "mooPdUtils.h"
 
 /* black magic */
 #ifdef NT
@@ -23,7 +24,7 @@
 
 #include <math.h>
 #include <flite/flite.h>
-#include "flite/cst_wave.h"
+#include <flite/cst_wave.h>
 
 /*--------------------------------------------------------------------
  * DEBUG
@@ -133,7 +134,7 @@ void flite_synth(t_flite *x) {
 /*--------------------------------------------------------------------
  * flite_text : set text-buffer
  *--------------------------------------------------------------------*/
-void flite_text(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
+void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
   int i, alen, buffered;
   t_symbol *asym;
 
