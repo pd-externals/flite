@@ -3942,57 +3942,70 @@ fi
 
 WFLAGS="-Wall"
 
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+## BEGIN machine-dependent variables
 
 LD=ld
+
+##-- Linux
 if test `uname -s` = Linux;
 then
-  LFLAGS="$LFLAGS -export_dynamic -shared"
-  if test "$DEBUG" = "no"; then
-    #OFLAGS="-O6 -funroll-loops -fomit-frame-pointer"
-    OFLAGS="-O3 -pipe"
+  LFLAGS="$LFFLAGS -Wl,-export-dynamic -shared"
+  if test "$DEBUG" = "no" -a -z "$UCFLAGS"; then
+    ##-- only set OFLAGS if user CFLAGS are empty
+    OFLAGS="-O2 -pipe"
   else
     OFLAGS="-g"
   fi
   OFLAGS="$OFLAGS -fPIC"
   DFLAGS="$DFLAGS -DPIC"
-  EXT=pd_linux
+  PDEXT=pd_linux
 fi
 
+##-- MacOSX (darwin)
+if test `uname -s` = Darwin;
+then
+  LD=cc
+  LFLAGS="$LFLAGS -bundle -undefined suppress  -flat_namespace"
+  DFLAGS="$DFLAGS -DMACOSX"
+  if test "$DEBUG" = "no" -a -z "$UCFLAGS"; then
+    ##-- only set OFLAGS if user CFLAGS are empty
+    OFLAGS="-O2"
+  else
+    OFLAGS="-g"
+  fi
+  PDEXT=pd_darwin
+fi
+
+##-- alpha
 if test `uname -m` = alpha;
 then
  AFLAGS="-mieee  -mcpu=ev56";
  OFLAGS="$CFLAGS"
 fi
 
+##-- irix64
 if test `uname -s` = IRIX64;
 then
   LFLAGS="$LFLAGS -n32 -DUNIX -DIRIX -DN32 -woff 1080,1064,1185 \
 	-OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -OPT:cray_ivdep=true \
 	-shared -rdata_shared"
   OFLAGS="$CFLAGS"
-EXT=pd_irix6
+  PDEXT=pd_irix6
 fi
 
+##-- irix32
 if test `uname -s` = IRIX32;
 then
   LFLAGS="$LFLAGS -o32 -DUNIX -DIRIX -O2 -shared -rdata_shared"
   OFLAGS="$CFLAGS"
-  EXT=pd_irix5
+  PDEXT=pd_irix5
 fi
 
-if test `uname -s` = Darwin;
-then
-  LD=cc
-  LFLAGS="$LFLAGS -bundle -undefined suppress  -flat_namespace"
-  EXT=pd_darwin
-  DFLAGS="$DFLAGS -DMACOSX"
+EXT=$PDEXT
 
-  if test "$DEBUG" = "no"; then
-    OFLAGS="-O2"
-  else
-    OFLAGS="-g"
-  fi
-fi
+## END machine-dependent variables
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CPPFLAGS="$UCPPFLAGS"
 CFLAGS="$UCFLAGS"
