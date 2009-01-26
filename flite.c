@@ -82,10 +82,12 @@ void flite_synth(t_flite *x) {
 # endif
 
   // -- sanity checks
-  if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class)))
-    error("flite: no such array '%s'", x->x_arrayname->s_name);
+  if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
+    return
+  }
   if (!x->textbuf) {
-    error("flite: attempt to synthesize empty text-buffer!");
+    pd_error(x,"flite: attempt to synthesize empty text-buffer!");
     return;
   }
 
@@ -95,7 +97,7 @@ void flite_synth(t_flite *x) {
   wave = flite_text_to_wave(x->textbuf,voice);
 
   if (!wave) {
-    error("flite: synthesis failed for text '%s'", x->textbuf);
+    pd_error(x,"flite: synthesis failed for text '%s'", x->textbuf);
     return;
   }
 
@@ -112,7 +114,7 @@ void flite_synth(t_flite *x) {
 
   garray_resize(a, wave->num_samples);
   if (!garray_getfloatarray(a, &vecsize, &vec))
-    error("flite: bad template for write to array '%s'", x->x_arrayname->s_name);
+    pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
 
 # ifdef FLITE_DEBUG
   post("flite: ->write to garray loop<-");
@@ -144,7 +146,7 @@ void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
     x->textbuf = getbytes(x->bufsize);
   }
   if (x->textbuf == NULL) {
-    error("flite: allocation failed for text buffer");
+    pd_error(x,"flite: allocation failed for text buffer");
     x->bufsize = 0;
     return;
   }
@@ -160,7 +162,7 @@ void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
       x->textbuf = resizebytes(x->textbuf,x->bufsize,x->bufsize+DEFAULT_BUFSTEP);
       x->bufsize = x->bufsize+DEFAULT_BUFSTEP;
       if (x->textbuf == NULL) {
-	error("flite: allocation failed for text buffer");
+	pd_error(x,"flite: allocation failed for text buffer");
 	x->bufsize = 0;
 	return;
       }
