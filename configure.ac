@@ -58,6 +58,16 @@ AC_SUBST(PACKAGE_VERSION)
 AC_SUBST(PACKAGE_NAME)
 AC_SUBST(BUGREPORT)
 
+dnl ----- maintainer mode
+dnl  + enables "maintainer mode" only with ./configure --enable-maintainer-mode
+dnl    - causes make __never__ to invoke 'config/missing', e.g. any autotools
+dnl    - basically a hack to avoid version mismatches in autoconf, automake, etc.
+dnl      for autobuilds from SVN
+dnl  + maintainer should call ./configure --enable-maintainer-mode, and must keep
+dnl    SVN sources consistent
+AM_MAINTAINER_MODE
+dnl -----/maintainer mode
+
 ##-- banner stuff
 compiled_by="${LOGNAME:-${USER:-(unknown)}}"
 compiled_on="`date`"
