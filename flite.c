@@ -84,7 +84,7 @@ void flite_synth(t_flite *x) {
   // -- sanity checks
   if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
     pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
-    return
+    return;
   }
   if (!x->textbuf) {
     pd_error(x,"flite: attempt to synthesize empty text-buffer!");
