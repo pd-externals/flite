@@ -3736,7 +3736,7 @@ echo "$as_me: WARNING: Unknown kernel type \"$uname_s\" defaults to \"Linux\"" >
   if test "$ENABLE_DEBUG" = "no" -a -z "$UCFLAGS"; then
     ##-- only set OFLAGS if user CFLAGS are empty
     PDEXT_OFLAGS="-O2 -pipe"
-  else
+  elif test "$ENABLE_DEBUG" = "yes"; then
     PDEXT_OFLAGS="-g"
   fi
   PDEXT_OFLAGS="$PDEXT_OFLAGS -fPIC"
@@ -3753,7 +3753,7 @@ echo "$as_me: WARNING: Unknown kernel type \"$uname_s\" defaults to \"Linux\"" >
   if test "$ENABLE_DEBUG" = "no" -a -z "$UCFLAGS"; then
     ##-- only set OFLAGS if user CFLAGS are empty
     PDEXT_OFLAGS="-O2"
-  else
+  elif test "$ENABLE_DEBUG" = "yes"; then
     PDEXT_OFLAGS="-g"
   fi
   PDEXT=pd_darwin
@@ -3793,7 +3793,7 @@ echo "$as_me: will use pd extension \".$PDEXT\" for pd externals" >&6;}
 
  ##-- add defaults to user flags
  CPPFLAGS="$UCPPFLAGS $PDEXT_IFLAGS $PDEXT_DFLAGS"
- CFLAGS="$UCFLAGS $PDEXT_FLAGS $PDEXT_AFLAGS $PDEXT_WFLAGS"
+ CFLAGS="$UCFLAGS $PDEXT_OFLAGS $PDEXT_AFLAGS $PDEXT_WFLAGS"
  LDFLAGS="$ULDFLAGS $PDEXT_LFLAGS"
 
  ## END platform-dependent variables
