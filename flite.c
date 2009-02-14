@@ -48,7 +48,7 @@ static cst_voice *voice;
 
 static const char *flite_description =
   "flite: Text-to-Speech external v" PACKAGE_VERSION " by Bryan Jurish\n"
-  "flite: compiled on " PDFLITE_COMPILED_ON " by " PDFLITE_COMPILED_BY "\n"
+  "flite: compiled on " PACKAGE_BUILD_DATE " by " PACKAGE_BUILD_USER "\n"
   ;
 //static char *flite_acknowledge = "flite: based on code by ";
 //static char *flite_version = "flite: PD external v%s by Bryan Jurish";

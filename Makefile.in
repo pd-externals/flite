@@ -22,9 +22,10 @@
 # Process this file with Automake to create Makefile.in.
 #-----------------------------------------------------------------------
 
-#-----------------------------------------------------------------------
-# Options & Subdirectories
-#-----------------------------------------------------------------------
+#ACLOCAL_AMFLAGS = -I m4 
+
+#AUTOMAKE_OPTIONS = foreign dist-bzip2 dist-zip
+#AUTOMAKE_OPTIONS = foreign
 
 
 srcdir = @srcdir@
@@ -47,13 +48,14 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-libexec_PROGRAMS = flite$(EXEEXT)
-subdir = .
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure COPYING
+	$(top_srcdir)/configure $(top_srcdir)/pdexternal.am COPYING
+pdext_PROGRAMS = flite$(EXEEXT)
+subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_pd_external.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -61,9 +63,9 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(datadir)"
-libexecPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(libexec_PROGRAMS)
+am__installdirs = "$(DESTDIR)$(pdextdir)" "$(DESTDIR)$(pddocdir)"
+pdextPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+PROGRAMS = $(pdext_PROGRAMS)
 am_flite_OBJECTS = flite.$(OBJEXT)
 flite_OBJECTS = $(am_flite_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -90,10 +92,11 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-dataDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(data_DATA)
+pddocDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(pddoc_DATA)
 ETAGS = etags
 CTAGS = ctags
+DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -106,7 +109,6 @@ GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
-AFLAGS = @AFLAGS@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
@@ -121,43 +123,32 @@ CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEBUG = @DEBUG@
-
-#-----------------------------------------------------------------------
-# external compilation : flags
-#-----------------------------------------------------------------------
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DFLAGS = @DFLAGS@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-
-#-----------------------------------------------------------------------
-# pd externals (hacked 'libexec_*')
-#-----------------------------------------------------------------------
-EXEEXT = .@EXT@
-EXT = @EXT@
+ENABLE_DEBUG = @ENABLE_DEBUG@
+EXEEXT = .@PDEXT@
 FLITE_LANGLIBS = @FLITE_LANGLIBS@
 FLITE_LEXLIBS = @FLITE_LEXLIBS@
 FLITE_LIBS = @FLITE_LIBS@
 FLITE_VOICELIBS = @FLITE_VOICELIBS@
-IFLAGS = @IFLAGS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LFLAGS = @LFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
-OFLAGS = @OFLAGS@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -165,19 +156,19 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-
-#-----------------------------------------------------------------------
-# Flags and variables
-#-----------------------------------------------------------------------
-PD_DIR = @PD_DIR@
-PD_DOCDIR = @PD_DOC@
-PD_EXTDIR = @PD_EXTDIR@
-PD_INC = @PD_INC@
+PDEXT = @PDEXT@
+PDEXT_AFLAGS = @PDEXT_AFLAGS@
+PDEXT_DFLAGS = @PDEXT_DFLAGS@
+PDEXT_IFLAGS = @PDEXT_IFLAGS@
+PDEXT_LFLAGS = @PDEXT_LFLAGS@
+PDEXT_OFLAGS = @PDEXT_OFLAGS@
+PDEXT_WFLAGS = @PDEXT_WFLAGS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-WFLAGS = @WFLAGS@
+WANT_OBJECT_EXTERNALS_FALSE = @WANT_OBJECT_EXTERNALS_FALSE@
+WANT_OBJECT_EXTERNALS_TRUE = @WANT_OBJECT_EXTERNALS_TRUE@
 ac_ct_CC = @ac_ct_CC@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -188,7 +179,7 @@ am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
 build_alias = @build_alias@
-datadir = @PD_DOCDIR@
+datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
@@ -199,13 +190,20 @@ includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
-libexecdir = @PD_EXTDIR@
+libexecdir = @libexecdir@
 localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
+pd_buildext = @pd_buildext@
+pddir = @pddir@
+pddocdir = @pddocdir@
+pdexecdir = @pdexecdir@
+pdextdir = @pdextdir@
+pdexternsdir = @pdexternsdir@
 pdfdir = @pdfdir@
+pdincludedir = @pdincludedir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
@@ -213,29 +211,21 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-
-#AUTOMAKE_OPTIONS = foreign dist-bzip2 dist-zip
-AUTOMAKE_OPTIONS = foreign
-SUBDIRS = config
-SUFFIXES = .pod .txt
-PDEXT = @EXT@
-data_DATA = flite-help.pd
+DEXT = @PDEXT@
+SUFFIXES = .@PDEXT@ .pod .txt .html
 
 #-----------------------------------------------------------------------
-# sources
+# Variables: distribution
 #-----------------------------------------------------------------------
-flite_SOURCES = flite.c mooPdUtils.h
-AM_CPPFLAGS = $(DEFS) $(IFLAGS) $(DFLAGS)
-AM_CFLAGS = $(OFLAGS) $(WFLAGS) $(AFLAGS)
-flite_LDFLAGS = $(LFLAGS)
-flite_LDADD = $(FLITE_VOICELIBS) $(FLITE_LANGLIBS) $(FLITE_LEXLIBS) $(FLITE_LIBS)
+EXTRA_DIST = $(PODS) $(PODS:.pod=.txt) $(pddoc_DATA) $(pdext_DATA) \
+	$(pdexterns_DATA) $(pdexec_DATA) $(wildcard COPYING) \
+	$(wildcard Changes) $(wildcard ChangeLog) $(wildcard \
+	README.cvs) $(wildcard depcomp) $(wildcard install-sh) \
+	$(wildcard ltmain.sh) $(wildcard mising) $(wildcard \
+	mkinstalldirs) flite-1.1-noaudio.patch
 
-#-----------------------------------------------------------------------
-# Variables: cleanup
-#-----------------------------------------------------------------------
-#MOSTLYCLEANFILES =
-
-#CLEANFILES =
+#all-local: $(PODS:.pod=.txt)
+CLEANFILES = *.$(PDEXT)
 DISTCLEANFILES = \
 	config.log	\
 	config.cache	\
@@ -243,38 +233,61 @@ DISTCLEANFILES = \
 
 MAINTAINERCLEANFILES = *~ \
 	$(PODS:.pod=.txt) \
-	Makefile Makefile.in \
+	Makefile \
+	Makefile.in \
 	aclocal.m4 \
+	compile \
 	configure \
+	config.h.in \
+	config.guess \
+	config.sub \
+	depcomp \
 	install-sh \
+	ltmain.sh \
+	missing \
+	mkinstalldirs \
 	stamp-h.in \
-	config.h.in
+	texinfo.tex \
+	ylwrap
 
 
-#CVSCLEAN_SUBDIRS = $(SUBDIRS)
+#-----------------------------------------------------------------------
+# Includes
+#-----------------------------------------------------------------------
 
-#CVSCLEANFILES = Makefile.in Makefile
+#-----------------------------------------------------------------------
+# Options & Subdirectories
+#-----------------------------------------------------------------------
+ACLOCAL_AMFLAGS = -I m4 
+
+#AUTOMAKE_OPTIONS = foreign dist-bzip2 dist-zip
+AUTOMAKE_OPTIONS = foreign
+SUBDIRS = config
+pddoc_DATA = flite-help.pd
+
+#-----------------------------------------------------------------------
+# sources
+#-----------------------------------------------------------------------
+flite_SOURCES = flite.c mooPdUtils.h
+
+#-----------------------------------------------------------------------
+# external compilation : flags
+#-----------------------------------------------------------------------
+flite_LDFLAGS = $(LFLAGS)
+flite_LDADD = $(FLITE_VOICELIBS) $(FLITE_LANGLIBS) $(FLITE_LEXLIBS) $(FLITE_LIBS)
 
 #-----------------------------------------------------------------------
 # Additional Variables & Rules: PODS
 #-----------------------------------------------------------------------
 PODS = README.pod
-
-#-----------------------------------------------------------------------
-# Variables: distribution
-#-----------------------------------------------------------------------
-EXTRA_DIST = $(PODS:.pod=.txt) $(data_DATA) autogen.sh configure \
-	COPYING flite-1.1-noaudio.patch
-
-DIST_SUBDIRS = $(SUBDIRS)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .pod .txt .c .o .obj
+.SUFFIXES: .@PDEXT@ .pod .txt .html .c .o .obj
 am--refresh:
 	@:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/pdexternal.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -322,29 +335,29 @@ $(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
-install-libexecPROGRAMS: $(libexec_PROGRAMS)
+install-pdextPROGRAMS: $(pdext_PROGRAMS)
 	@$(NORMAL_INSTALL)
-	test -z "$(libexecdir)" || $(mkdir_p) "$(DESTDIR)$(libexecdir)"
-	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
+	test -z "$(pdextdir)" || $(mkdir_p) "$(DESTDIR)$(pdextdir)"
+	@list='$(pdext_PROGRAMS)'; for p in $$list; do \
 	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
 	  if test -f $$p \
 	  ; then \
 	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(libexecPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(libexecdir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(libexecPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(libexecdir)/$$f" || exit 1; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(pdextPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(pdextdir)/$$f'"; \
+	   $(INSTALL_PROGRAM_ENV) $(pdextPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(pdextdir)/$$f" || exit 1; \
 	  else :; fi; \
 	done
 
-uninstall-libexecPROGRAMS:
+uninstall-pdextPROGRAMS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(libexec_PROGRAMS)'; for p in $$list; do \
+	@list='$(pdext_PROGRAMS)'; for p in $$list; do \
 	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f '$(DESTDIR)$(libexecdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(libexecdir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(pdextdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pdextdir)/$$f"; \
 	done
 
-clean-libexecPROGRAMS:
-	-test -z "$(libexec_PROGRAMS)" || rm -f $(libexec_PROGRAMS)
+clean-pdextPROGRAMS:
+	-test -z "$(pdext_PROGRAMS)" || rm -f $(pdext_PROGRAMS)
 flite$(EXEEXT): $(flite_OBJECTS) $(flite_DEPENDENCIES) 
 	@rm -f flite$(EXEEXT)
 	$(LINK) $(flite_LDFLAGS) $(flite_OBJECTS) $(flite_LDADD) $(LIBS)
@@ -371,22 +384,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 uninstall-info-am:
-install-dataDATA: $(data_DATA)
+install-pddocDATA: $(pddoc_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(datadir)" || $(mkdir_p) "$(DESTDIR)$(datadir)"
-	@list='$(data_DATA)'; for p in $$list; do \
+	test -z "$(pddocdir)" || $(mkdir_p) "$(DESTDIR)$(pddocdir)"
+	@list='$(pddoc_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(dataDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(datadir)/$$f'"; \
-	  $(dataDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(datadir)/$$f"; \
+	  echo " $(pddocDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pddocdir)/$$f'"; \
+	  $(pddocDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pddocdir)/$$f"; \
 	done
 
-uninstall-dataDATA:
+uninstall-pddocDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(data_DATA)'; for p in $$list; do \
+	@list='$(pddoc_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(datadir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(datadir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(pddocdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pddocdir)/$$f"; \
 	done
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -524,6 +537,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/m4
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -664,10 +678,10 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(PROGRAMS) $(DATA) config.h
+all-am: Makefile $(PROGRAMS) $(DATA) config.h all-local
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(datadir)"; do \
+	for dir in "$(DESTDIR)$(pdextdir)" "$(DESTDIR)$(pddocdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -687,6 +701,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -698,7 +713,7 @@ maintainer-clean-generic:
 	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
 clean: clean-recursive
 
-clean-am: clean-generic clean-libexecPROGRAMS mostlyclean-am
+clean-am: clean-generic clean-pdextPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -717,9 +732,9 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-dataDATA
+install-data-am: install-pddocDATA install-pdextPROGRAMS
 
-install-exec-am: install-libexecPROGRAMS
+install-exec-am:
 
 install-info: install-info-recursive
 
@@ -747,53 +762,44 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-dataDATA uninstall-info-am \
-	uninstall-libexecPROGRAMS
+uninstall-am: uninstall-info-am uninstall-pddocDATA \
+	uninstall-pdextPROGRAMS
 
 uninstall-info: uninstall-info-recursive
 
-.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
-	check-am clean clean-generic clean-libexecPROGRAMS \
-	clean-recursive ctags ctags-recursive dist dist-all dist-bzip2 \
-	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
-	distclean-recursive distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am \
-	install-dataDATA install-exec install-exec-am install-info \
-	install-info-am install-libexecPROGRAMS install-man \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	maintainer-clean-local maintainer-clean-recursive mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
-	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-dataDATA uninstall-info-am uninstall-libexecPROGRAMS
+.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am all-local \
+	am--refresh check check-am clean clean-generic \
+	clean-pdextPROGRAMS clean-recursive ctags ctags-recursive dist \
+	dist-all dist-bzip2 dist-gzip dist-shar dist-tarZ dist-zip \
+	distcheck distclean distclean-compile distclean-generic \
+	distclean-hdr distclean-recursive distclean-tags \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-pddocDATA \
+	install-pdextPROGRAMS install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic maintainer-clean-local \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am uninstall-info-am \
+	uninstall-pddocDATA uninstall-pdextPROGRAMS
 
-
-maintainer-clean-local:
-	rm -rf autom4te.cache
 
 .pod.txt:
 	pod2text $< $@
 
-#DISTHOOK_DIRS = foo
-#DISTHOOK_FILES = foo/bar.txt foo/baz.txt
-#dist-hook:
-#	for d in $(DISTHOOK_DIRS); do\
-#	  mkdir -p $(distdir)/$$d ;\
-#	done
-#	for f in $(DISTHOOK_FILES); do\
-#	  cp -p $(srcdir)/$$f $(distdir)/$$f ;\
-#	done
+.pod.html:
+	pod2html $< --outfile=$@
 
-#dist-bz2: dist-bzip2 ;
+maintainer-clean-local:
+	rm -rf autom4te.cache
 
-#-----------------------------------------------------------------------
-# Rules: cleanup
-#-----------------------------------------------------------------------
 .PHONY: cvsclean cvsclean-hook
 
 cvsclean: maintainer-clean ;
+
+all-local: $(PODS:.pod=.txt)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

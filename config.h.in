@@ -17,6 +17,12 @@
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 
+/* Date this package was configured */
+#undef PACKAGE_BUILD_DATE
+
+/* User who configured this package */
+#undef PACKAGE_BUILD_USER
+
 /* Define to the full name of this package. */
 #undef PACKAGE_NAME
 
@@ -29,14 +35,11 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* User who compiled this external */
-#undef PDFLITE_COMPILED_BY
-
-/* When this external was compiled */
-#undef PDFLITE_COMPILED_ON
-
 /* This is the function we will call to register the synth voice */
 #undef PDFLITE_REGISTER_VOICE
 
 /* Version number of package */
 #undef VERSION
+
+/* Define this if you are building single-object externals */
+#undef WANT_OBJECT_EXTERNALS

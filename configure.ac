@@ -4,59 +4,30 @@ AC_PREREQ(2.5)
 
 dnl Some handy macros
 define([THE_PACKAGE_NAME],    [pdflite])
-define([THE_PACKAGE_VERSION], [0.02])
+define([THE_PACKAGE_VERSION], [0.02-1])
 define([THE_PACKAGE_AUTHOR],  [moocow@ling.uni-potsdam.de])
 
 AC_INIT(THE_PACKAGE_NAME, THE_PACKAGE_VERSION, THE_PACKAGE_AUTHOR)
 
-dnl
-dnl source & aux
-dnl
+##-- Additional m4 macros
+AC_CONFIG_MACRO_DIR(m4)
+
+##-- source & aux
 AC_CONFIG_AUX_DIR(config)
+dnl AC_CONFIG_AUX_DIR(.)
 
-dnl
-dnl use automake
-dnl
-AM_INIT_AUTOMAKE(THE_PACKAGE_NAME, THE_PACKAGE_VERSION)
-
-dnl
-dnl use autoheader
-dnl
-AM_CONFIG_HEADER(config.h)
-
-dnl
-dnl default prefix (== pd-dir)
-dnl
-AC_PREFIX_DEFAULT(/usr/local/lib/pd)
-
-##-- save user *FLAGS
+##-- save user's CFLAGS,CPPFLAGS
 UCPPFLAGS="$CPPFLAGS"
 UCFLAGS="$CFLAGS"
 ULDFLAGS="$LDFLAGS"
 ULIBS="$LIBS"
 
-dnl
-dnl Programs
-dnl
-AC_PROG_CC
-AC_PROG_INSTALL
+##-- use automake, autoheader
+AM_INIT_AUTOMAKE(THE_PACKAGE_NAME, THE_PACKAGE_VERSION)
+AM_CONFIG_HEADER(config.h)
 
-dnl
-dnl Substitutions
-dnl 
-AC_SUBST(AFLAGS)
-AC_SUBST(DFLAGS)
-AC_SUBST(IFLAGS)
-AC_SUBST(LFLAGS)
-AC_SUBST(OFLAGS)
-AC_SUBST(WFLAGS)
-AC_SUBST(LD)
-AC_SUBST(EXT)
-
-dnl version stuff (automatically exported?)
-AC_SUBST(PACKAGE_VERSION)
-AC_SUBST(PACKAGE_NAME)
-AC_SUBST(BUGREPORT)
+##-- Default prefix
+AC_PREFIX_DEFAULT(/usr/local)
 
 dnl ----- maintainer mode
 dnl  + enables "maintainer mode" only with ./configure --enable-maintainer-mode
@@ -68,59 +39,26 @@ dnl    SVN sources consistent
 AM_MAINTAINER_MODE
 dnl -----/maintainer mode
 
-##-- banner stuff
-compiled_by="${LOGNAME:-${USER:-(unknown)}}"
-compiled_on="`date`"
-test -z "$compiled_on" && compiled_on="?"
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+## Pd external checks
+AX_PD_EXTERNAL
+## /pd external common
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-AC_DEFINE_UNQUOTED(PDFLITE_COMPILED_BY, "$compiled_by", [User who compiled this external])
-AC_DEFINE_UNQUOTED(PDFLITE_COMPILED_ON, "$compiled_on", [When this external was compiled])
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+## Local: flite
 
-dnl
-dnl pd-directory/ies
-dnl 
-AC_ARG_WITH(pd-dir,
-	AC_HELP_STRING([--with-pd-dir=DIR], [PD base directory (default=/usr/local/pd)]),
-	[PD_DIR="$withval"],
-	[PD_DIR="/usr/local/pd"])
-AC_SUBST(PD_DIR)
-
-AC_ARG_WITH(pd-include,
-	AC_HELP_STRING([--with-pd-include=DIR], [PD include directory (default=${PD_DIR}/src)]),
-	[PD_INC="$withval"],
-	[PD_INC="${PD_DIR}/src"])
-IFLAGS="$IFLAGS -I${PD_INC}"
-AC_SUBST(PD_INC)
-
-AC_ARG_WITH(pd-externs,
-	AC_HELP_STRING([--with-pd-externs=DIR], [PD externals directory (default=${PD_DIR}/externs)]),
-	[PD_EXTDIR="$withval"],
-	[PD_EXTDIR="${PD_DIR}/externs"])
-AC_SUBST(PD_EXTDIR)
-
-
-AC_ARG_WITH(pd-doc,
-	AC_HELP_STRING([--with-pd-doc=DIR],
-	     [PD documentation directory (default=${PD_DIR}/doc/5.reference)]),
-	[PD_DOCDIR="$withval"],
-	[PD_DOCDIR="${PD_DIR}/doc/5.reference"])
-AC_SUBST(PD_DOCDIR)
-
-
-dnl
-dnl flite source directory
-dnl 
+##-- flite source directory
 AC_ARG_WITH(flite-dir,
 	AC_HELP_STRING([--with-flite-dir=DIR], [Flite source directory (default=none)]),
 	[FLITE_DIR="$withval"],
 	)
 if test -n "$FLITE_DIR"; then
-  IFLAGS="$IFLAGS -I${FLITE_DIR}/include"
-  LFLAGS="$LFLAGS -L${FLITE_DIR}/lib"
+  CPPFLAGS="$CPPFLAGS -I${FLITE_DIR}/include"
+  LDFLAGS="$LDFLAGS -L${FLITE_DIR}/lib"
 fi
 
 ##-- check: headers: flite.h
-CPPFLAGS="$UCPPFLAGS $IFLAGS"
 AC_CHECK_HEADER([flite/flite.h],[pdflite_have_header=yes],[pdflite_have_header=no],[ ])
 if test "$pdflite_have_header" != "yes"; then
   AC_MSG_WARN([Required header 'flite.h' not found])
@@ -129,7 +67,7 @@ if test "$pdflite_have_header" != "yes"; then
 fi
 
 ##-- check libs: libflite.a
-LDFLAGS="$ULDFLAGS $LFLAGS"
+LDFLAGS_SAVE="$LDFLAGS"
 AC_CHECK_LIB(flite,[flite_init],[pdflite_have_lib=yes],[pdflite_have_lib=no],[-lm])
 if test "$pdflite_have_lib" != "yes"; then
   for d in \
@@ -138,10 +76,9 @@ if test "$pdflite_have_lib" != "yes"; then
     /usr/flite/lib /usr/local/flite/lib /sw/flite/lib \
     /usr/lib/flite/lib /usr/local/lib/flite/lib /sw/lib/flite/lib
   do
-    LDFLAGS="$ULDFLAGS $LFLAGS -L$d"
+    LDFLAGS="$LDFLAGS_SAVE -L$d"
     AC_CHECK_LIB(flite,[flite_init],[pdflite_have_lib=yes],[pdflite_have_lib=no],[-lm])
     if test "$pdflite_have_lib" = "yes"; then
-      LFLAGS="$LFLAGS -L$d"
       break
     fi
   done
@@ -158,133 +95,52 @@ fi
 FLITE_LIBS="-lflite -lm"
 AC_SUBST(FLITE_LIBS)
 
-dnl
-dnl Check for flite : libs : flite_cmulex
-dnl
-LDFLAGS="$ULDFLAGS $LFLAGS"
+##-- Check for flite : libs : flite_cmulex
 AC_CHECK_LIB(flite_cmulex,[cmu_lex_init],[],
 	[AC_MSG_ERROR([required library 'flite_cmulex' not found -- quitting],1)],
 	[-lflite -lm])
 FLITE_LEXLIBS="-lflite_cmulex"
 AC_SUBST(FLITE_LEXLIBS)
 
-dnl
-dnl Check for flite : libs : flite_usenglish
-dnl
-LDFLAGS="$ULDFLAGS $LFLAGS"
+##-- Check for flite : libs : flite_usenglish
 AC_CHECK_LIB(flite_usenglish,[usenglish_init],[],
 	[AC_MSG_ERROR([required library 'flite_usenglish' not found -- quitting],1)],
 	[-lflite_cmulex -lflite -lm])
 FLITE_LANGLIBS="-lflite_usenglish"
 AC_SUBST(FLITE_LANGLIBS)
 
-dnl Check for flite : libs : flite_cmu_us_kal16
-dnl
-LDFLAGS="$ULDFLAGS $LFLAGS"
+##-- Check for flite : libs : flite_cmu_us_kal16
 AC_CHECK_LIB(flite_cmu_us_kal16,[register_cmu_us_kal],[],
 	[AC_MSG_ERROR([required library 'flite_cmu_us_kal16' not found -- quitting],1)],
 	[-lflite_usenglish -lflite_cmulex -lflite -lm])
 FLITE_VOICELIBS="-lflite_cmu_us_kal16"
 AC_SUBST(FLITE_VOICELIBS)
 
+##-- register voice function
 AC_DEFINE([PDFLITE_REGISTER_VOICE],[register_cmu_us_kal],
 	[This is the function we will call to register the synth voice])
 
+## /local: flite
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-dnl
-dnl debug version?
-dnl
-AC_MSG_CHECKING([whether we are building a debug version])
-AC_ARG_ENABLE([debug],
-	AC_HELP_STRING([--enable-debug],[build debug version (default=no)]))
+##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+## Local: debug
 
 if test "$enable_debug" = "yes" ; then
-  AC_MSG_RESULT(yes)
   DEBUG="yes"
   DFLAGS="$DFLAGS -DPDFLITE_DEBUG"
 else
-  AC_MSG_RESULT(no)
   DEBUG="no"
 fi
 AC_SUBST(DEBUG)
 
-dnl
-dnl compiler warnings
-dnl
-WFLAGS="-Wall"
+## /local: debug
+##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-## BEGIN machine-dependent variables
-
-LD=ld
-
-##-- Linux
-if test `uname -s` = Linux; 
-then
-  LFLAGS="$LFFLAGS -Wl,-export-dynamic -shared"
-  if test "$DEBUG" = "no" -a -z "$UCFLAGS"; then
-    ##-- only set OFLAGS if user CFLAGS are empty
-    OFLAGS="-O2 -pipe" 
-  else
-    OFLAGS="-g"
-  fi
-  OFLAGS="$OFLAGS -fPIC"
-  DFLAGS="$DFLAGS -DPIC"
-  PDEXT=pd_linux
-fi
-
-##-- MacOSX (darwin)
-if test `uname -s` = Darwin;
-then
-  LD=cc
-  LFLAGS="$LFLAGS -bundle -undefined suppress  -flat_namespace"
-  DFLAGS="$DFLAGS -DMACOSX"
-  if test "$DEBUG" = "no" -a -z "$UCFLAGS"; then
-    ##-- only set OFLAGS if user CFLAGS are empty
-    OFLAGS="-O2"
-  else
-    OFLAGS="-g"
-  fi
-  PDEXT=pd_darwin
-fi
-
-##-- alpha
-if test `uname -m` = alpha; 
-then 
- AFLAGS="-mieee  -mcpu=ev56"; 
- OFLAGS="$CFLAGS"
-fi
-
-##-- irix64
-if test `uname -s` = IRIX64; 
-then
-  LFLAGS="$LFLAGS -n32 -DUNIX -DIRIX -DN32 -woff 1080,1064,1185 \
-	-OPT:roundoff=3 -OPT:IEEE_arithmetic=3 -OPT:cray_ivdep=true \
-	-shared -rdata_shared"
-  OFLAGS="$CFLAGS"
-  PDEXT=pd_irix6
-fi
-
-##-- irix32
-if test `uname -s` = IRIX32; 
-then
-  LFLAGS="$LFLAGS -o32 -DUNIX -DIRIX -O2 -shared -rdata_shared"
-  OFLAGS="$CFLAGS"
-  PDEXT=pd_irix5
-fi
-
-EXT=$PDEXT
-
-## END machine-dependent variables
-##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-dnl
-dnl Restore user flags
-dnl
-CPPFLAGS="$UCPPFLAGS"
-CFLAGS="$UCFLAGS"
-LDFLAGS="$ULDFLAGS"
-LIBS="$ULIBS"
+##-- Restore user flags
+#CPPFLAGS="$UCPPFLAGS"
+#CFLAGS="$UCFLAGS"
+#LDFLAGS="$ULDFLAGS"
+#LIBS="$ULIBS"
 
 AC_OUTPUT(config/Makefile Makefile)
