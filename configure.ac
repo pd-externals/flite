@@ -4,13 +4,13 @@ AC_PREREQ(2.5)
 
 dnl Some handy macros
 define([THE_PACKAGE_NAME],    [pdflite])
-define([THE_PACKAGE_VERSION], [0.02-1])
+define([THE_PACKAGE_VERSION], [0.02-2])
 define([THE_PACKAGE_AUTHOR],  [moocow@ling.uni-potsdam.de])
 
 AC_INIT(THE_PACKAGE_NAME, THE_PACKAGE_VERSION, THE_PACKAGE_AUTHOR)
 
 ##-- Additional m4 macros
-AC_CONFIG_MACRO_DIR(m4)
+AC_CONFIG_MACRO_DIR(common/m4)
 
 ##-- source & aux
 AC_CONFIG_AUX_DIR(config)

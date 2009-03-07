@@ -9,14 +9,14 @@
 #-----------------------------------------------------------------------
 # Includes
 #-----------------------------------------------------------------------
-include $(top_srcdir)/pdexternal.am
+include $(top_srcdir)/common/pdexternal.am
 
 #-----------------------------------------------------------------------
 # Options & Subdirectories
 #-----------------------------------------------------------------------
 
 ##-- aclocal options (top level only)
-ACLOCAL_AMFLAGS = -I m4 
+ACLOCAL_AMFLAGS = -I common/m4 
 
 ## --- automake options
 #AUTOMAKE_OPTIONS = foreign dist-bzip2 dist-zip
@@ -38,7 +38,7 @@ pddoc_DATA = flite-help.pd
 #-----------------------------------------------------------------------
 # sources
 #-----------------------------------------------------------------------
-flite_SOURCES = flite.c mooPdUtils.h
+flite_SOURCES = flite.c common/mooPdUtils.h
 
 #-----------------------------------------------------------------------
 # external compilation : flags

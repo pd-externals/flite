@@ -10,7 +10,7 @@
 
 
 #include <m_pd.h>
-#include "mooPdUtils.h"
+#include "common/mooPdUtils.h"
 
 /* black magic */
 #ifdef NT
