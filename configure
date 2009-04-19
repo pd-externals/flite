@@ -3712,6 +3712,10 @@ echo "${ECHO_T}linux" >&6; }
      { echo "$as_me:$LINENO: result: darwin" >&5
 echo "${ECHO_T}darwin" >&6; }
      ;;
+   MINGW32_NT-5.1)
+     { echo "$as_me:$LINENO: result: win32" >&5
+echo "${ECHO_T}win32" >&6; }
+     ;;
    IRIX64)
      { echo "$as_me:$LINENO: result: irix64" >&5
 echo "${ECHO_T}irix64" >&6; }
