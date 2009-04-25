@@ -3786,10 +3786,10 @@ echo "$as_me: WARNING: Unknown kernel type \"$uname_s\" defaults to \"Linux\"" >
  if test "$uname_s" = "MINGW32_NT";  #MINGW32_NT-5.1
  then
   PDEXT_DFLAGS="\
-	-D'O_NONBLOCK=1' -D'srand48(n)=srand((n))' \
-        -D'drand48()=((double)rand()/RAND_MAX)' -D'bzero(p,n)=memset(p,0,n)' \
+	-DO_NONBLOCK=1 -Dsrand48(n)=srand((n)) \
+        -Ddrand48()=((double)rand()/RAND_MAX) -Dbzero(p,n)=memset(p,0,n) \
 	"
-  PDEXT_LFLAGS="-shared -L'${pddir}/bin' -L'${pddir}/obj'"
+  PDEXT_LFLAGS="-shared -L${pddir}/bin -L${pddir}/obj"
   PDEXT_CFLAGS="-mms-bitfields -DMSW -DNT"
   LIBS="$LIBS -lpd -lwsock32 -lpthreadGC2 -lkernel32 -luser32 -lgdi32 -lregex"
   if test "$ENABLE_DEBUG" = "no" -a -z "$UCFLAGS"; then
