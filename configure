@@ -3712,9 +3712,11 @@ echo "${ECHO_T}linux" >&6; }
      { echo "$as_me:$LINENO: result: darwin" >&5
 echo "${ECHO_T}darwin" >&6; }
      ;;
-   MINGW32_NT-5.1)
+   MINGW32_NT-*)
+     ##-- build farm: `uname -s` = MINGW32_NT-5.1
      { echo "$as_me:$LINENO: result: win32" >&5
 echo "${ECHO_T}win32" >&6; }
+     uname_s="MINGW32_NT" ##-- normalize
      ;;
    IRIX64)
      { echo "$as_me:$LINENO: result: irix64" >&5
@@ -3781,7 +3783,7 @@ echo "$as_me: WARNING: Unknown kernel type \"$uname_s\" defaults to \"Linux\"" >
 
  ##-- win32 via minGW/MSYS
  ##   + courtesy of pd-extended build system, SVN externals/Makefile
- if test "$uname_s" = "MINGW32_NT-5.1";
+ if test "$uname_s" = "MINGW32_NT";  #MINGW32_NT-5.1
  then
   PDEXT_DFLAGS="\
 	-D'O_NONBLOCK=1' -D'srand48(n)=srand((n))' \
