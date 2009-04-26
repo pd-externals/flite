@@ -616,6 +616,8 @@ LIBS
 build_alias
 host_alias
 target_alias
+EXTRA_CPPFLAGS
+AM_CPPFLAGS
 INSTALL_PROGRAM
 INSTALL_SCRIPT
 INSTALL_DATA
@@ -1762,10 +1764,66 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 ##-- save user's CFLAGS,CPPFLAGS
-UCPPFLAGS="$CPPFLAGS"
-UCFLAGS="$CFLAGS"
-ULDFLAGS="$LDFLAGS"
-ULIBS="$LIBS"
+
+ ##-- parse user's CFLAGS,CPPFLAGS
+
+
+ ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+ ## BEGIN AX_DISTRIBUTE_CFLAGS
+ axdf_cppflags=
+ axdf_cflags=
+
+ for axdf_flag in $CFLAGS
+ do
+   case "$axdf_flag" in
+     -undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
+       axdf_cppflags="$axdf_cppflags $axdf_flag"
+       ;;
+     *)
+       axdf_cflags="$axdf_cflags $axdf_flag"
+       ;;
+   esac
+ done
+
+ test xCPPFLAGS != x && CPPFLAGS="$CPPFLAGS $axdf_cppflags"
+ test xcflags != x && cflags="$cflags $axdf_cflags"
+
+ ## END AX_DISTRIBUTE_CFLAGS
+ ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+ ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+ ## BEGIN AX_SAFE_CFLAGS
+ axsf_safe=
+ axsf_unsafe=
+
+ for axsf_flag in $CPPFLAGS
+ do
+   axsf_flag_tmp=`echo $axsf_flag | sed -e 's/[ '\''\"\(\)]//g'`
+   if test "${axsf_flag_tmp}" = "${axsf_flag}"; then
+     axsf_safe="$axsf_safe $axsf_flag"
+   else
+     axsf_unsafe="$axsf_unsafe $axsf_flag"
+   fi
+ done
+
+ test xcppflags != x && cppflags="$cppflags $axsf_safe"
+ test xEXTRA_CPPFLAGS != x && EXTRA_CPPFLAGS="$EXTRA_CPPFLAGS $axsf_unsafe"
+ ## END AX_SAFE_CFLAGS
+ ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ CFLAGS="$cflags"
+ CPPFLAGS="$cppflags"
+
+    AM_CPPFLAGS="\${EXTRA_CPPFLAGS}"
+
+
+
+ ##-- save (hacked) user's CFLAGS,CPPFLAGS
+ UCPPFLAGS="$CPPFLAGS"
+ UCFLAGS="$CFLAGS"
+ ULDFLAGS="$LDFLAGS"
+
 
 ##-- use automake, autoheader
 am__api_version="1.9"
@@ -2303,11 +2361,6 @@ fi
  ##vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
  ## prerequisites
 
-
- ##-- save user's CFLAGS,CPPFLAGS (do this before calling AX_PD_EXTERNAL!)
- #test -z "$UCPPFLAGS" && UCPPFLAGS="$CPPFLAGS"
- #test -z "$UCFLAGS"   &&   UCFLAGS="$CFLAGS"
- #test -z "$ULDFLAGS"   && ULDFLAGS="$LDFLAGS"
 
  ##-- Programs, prefix
  ac_ext=c
@@ -3817,11 +3870,6 @@ echo "$as_me: will use pd extension \".$PDEXT\" for pd externals" >&6;}
 
 
 
- ##-- add defaults to user flags
- CPPFLAGS="$UCPPFLAGS $PDEXT_IFLAGS $PDEXT_DFLAGS"
- CFLAGS="$UCFLAGS $PDEXT_OFLAGS $PDEXT_AFLAGS $PDEXT_WFLAGS"
- LDFLAGS="$ULDFLAGS $PDEXT_LFLAGS"
-
  ## END platform-dependent variables
  ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -4331,11 +4379,20 @@ fi
 ## /local: debug
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-##-- Restore user flags
-#CPPFLAGS="$UCPPFLAGS"
-#CFLAGS="$UCFLAGS"
-#LDFLAGS="$ULDFLAGS"
-#LIBS="$ULIBS"
+
+ ##-- add platform defaults to user flags
+ CPPFLAGS="$UCPPFLAGS $PDEXT_IFLAGS $PDEXT_DFLAGS"
+ CFLAGS="$UCFLAGS $PDEXT_OFLAGS $PDEXT_AFLAGS $PDEXT_WFLAGS"
+ LDFLAGS="$ULDFLAGS $PDEXT_LFLAGS"
+
+ { echo "$as_me:$LINENO: set       CPPFLAGS=\"$CPPFLAGS\"" >&5
+echo "$as_me: set       CPPFLAGS=\"$CPPFLAGS\"" >&6;}
+ { echo "$as_me:$LINENO: set EXTRA_CPPFLAGS=\"$EXTRA_CPPFLAGS\"" >&5
+echo "$as_me: set EXTRA_CPPFLAGS=\"$EXTRA_CPPFLAGS\"" >&6;}
+ { echo "$as_me:$LINENO: set         CFLAGS=\"$CFLAGS" >&5
+echo "$as_me: set         CFLAGS=\"$CFLAGS" >&6;}
+ { echo "$as_me:$LINENO: set        LDFLAGS=\"$LDFLAGS\"" >&5
+echo "$as_me: set        LDFLAGS=\"$LDFLAGS\"" >&6;}
 
 ac_config_files="$ac_config_files config/Makefile Makefile"
 
@@ -5032,6 +5089,8 @@ LIBS!$LIBS$ac_delim
 build_alias!$build_alias$ac_delim
 host_alias!$host_alias$ac_delim
 target_alias!$target_alias$ac_delim
+EXTRA_CPPFLAGS!$EXTRA_CPPFLAGS$ac_delim
+AM_CPPFLAGS!$AM_CPPFLAGS$ac_delim
 INSTALL_PROGRAM!$INSTALL_PROGRAM$ac_delim
 INSTALL_SCRIPT!$INSTALL_SCRIPT$ac_delim
 INSTALL_DATA!$INSTALL_DATA$ac_delim
@@ -5090,8 +5149,6 @@ PDEXT_AFLAGS!$PDEXT_AFLAGS$ac_delim
 PDEXT_DFLAGS!$PDEXT_DFLAGS$ac_delim
 PDEXT_IFLAGS!$PDEXT_IFLAGS$ac_delim
 PDEXT_LFLAGS!$PDEXT_LFLAGS$ac_delim
-PDEXT_OFLAGS!$PDEXT_OFLAGS$ac_delim
-PDEXT_WFLAGS!$PDEXT_WFLAGS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -5133,6 +5190,8 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+PDEXT_OFLAGS!$PDEXT_OFLAGS$ac_delim
+PDEXT_WFLAGS!$PDEXT_WFLAGS$ac_delim
 FLITE_LIBS!$FLITE_LIBS$ac_delim
 FLITE_LEXLIBS!$FLITE_LEXLIBS$ac_delim
 FLITE_LANGLIBS!$FLITE_LANGLIBS$ac_delim
@@ -5142,7 +5201,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 7; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 9; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

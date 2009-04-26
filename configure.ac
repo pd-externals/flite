@@ -17,10 +17,7 @@ AC_CONFIG_AUX_DIR(config)
 dnl AC_CONFIG_AUX_DIR(.)
 
 ##-- save user's CFLAGS,CPPFLAGS
-UCPPFLAGS="$CPPFLAGS"
-UCFLAGS="$CFLAGS"
-ULDFLAGS="$LDFLAGS"
-ULIBS="$LIBS"
+AX_PD_EARLY()
 
 ##-- use automake, autoheader
 AM_INIT_AUTOMAKE(THE_PACKAGE_NAME, THE_PACKAGE_VERSION)
@@ -137,10 +134,5 @@ AC_SUBST(DEBUG)
 ## /local: debug
 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-##-- Restore user flags
-#CPPFLAGS="$UCPPFLAGS"
-#CFLAGS="$UCFLAGS"
-#LDFLAGS="$ULDFLAGS"
-#LIBS="$ULIBS"
-
+AX_PD_LATE()
 AC_OUTPUT(config/Makefile Makefile)
