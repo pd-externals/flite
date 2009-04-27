@@ -57,7 +57,6 @@ ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
-AM_CPPFLAGS = @AM_CPPFLAGS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -160,6 +159,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 DEXT = @PDEXT@
 SUFFIXES = .@PDEXT@ .pod .txt .html
+AM_CPPFLAGS = $(EXTRA_CPPFLAGS)
 EXTRA_DIST = \
 	$(PODS) \
 	$(PODS:.pod=.txt) \
