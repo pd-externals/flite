@@ -33,7 +33,6 @@
 #X msg 146 380 bang;
 #X msg 197 381 stop;
 #X msg 146 358 start;
-#X text 173 485 Bryan Jurish <moocow@ling.uni-potsdam.de>;
 #X text 172 419 ACKNOWLEDGEMENTS:;
 #X text 190 434 Flite runtime speech synthesis library by Alan W Black
 and Kevin A. Lenzo.;
@@ -42,13 +41,14 @@ and Kevin A. Lenzo.;
 #X text 12 125 HELP_PATCH_AUTHORS "pd meta" information added by Jonathan
 Wilkes for Pd version 0.42.;
 #X text 12 25 LICENSE GPL v2;
-#X text 12 105 AUTHOR Bryan Jurish <moocow@ling.uni-potsdam.de>;
 #X text 12 45 DESCRIPTION text-to-speech synthesis with libflite;
 #X text 12 5 KEYWORDS control array;
 #X text 12 65 INLET_0 set text synth list;
 #X text 12 85 OUTLET_0 bang;
+#X text 12 105 AUTHOR Bryan Jurish <moocow.bovine@gmail.com>;
 #X restore 551 487 pd META;
 #X msg 58 145 text test 123;
+#X text 173 485 Bryan Jurish <moocow.bovine@gmail.com>;
 #X connect 4 0 3 0;
 #X connect 11 0 4 0;
 #X connect 12 0 4 0;
@@ -60,5 +60,5 @@ Wilkes for Pd version 0.42.;
 #X connect 25 0 24 0;
 #X connect 26 0 24 0;
 #X connect 27 0 25 0;
-#X connect 31 0 4 0;
-#X connect 33 0 4 0;
+#X connect 30 0 4 0;
+#X connect 32 0 4 0;
