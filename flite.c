@@ -75,7 +75,7 @@ void flite_synth(t_flite *x) {
   cst_wave *wave;
   int i,vecsize;
   t_garray *a;
-  t_float *vec;
+  t_word *vec;
 
 # ifdef FLITE_DEBUG
   post("flite: got message 'synth'");
@@ -113,14 +113,15 @@ void flite_synth(t_flite *x) {
 # endif
 
   garray_resize(a, wave->num_samples);
-  if (!garray_getfloatarray(a, &vecsize, &vec))
+  if (!garray_getfloatwords(a, &vecsize, &vec))
     pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
 
 # ifdef FLITE_DEBUG
   post("flite: ->write to garray loop<-");
 # endif
   for (i = 0; i < wave->num_samples; i++) {
-    *vec++ = wave->samples[i]/32767.0;
+    vec->w_float = wave->samples[i]/32767.0;
+    vec++;
   }
 
   // -- outlet synth-done-bang
