@@ -17,9 +17,10 @@ datafiles = \
 # VOICE can be one of {kal16, kal, awb, rms, slt}
 VOICE=kal16
 
+#alldebug: CPPFLAGS += -DFLITE_DEBUG=1
+
 cflags = -DVERSION='"$(lib.version)"' -DVOICE=$(VOICE)
 ldlibs = -lflite_cmu_us_$(VOICE) -lflite_cmulex -lflite -lm
-
 
 # include Makefile.pdlibbuilder from submodule directory 'pd-lib-builder'
 PDLIBBUILDER_DIR=pd-lib-builder/
