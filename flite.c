@@ -10,7 +10,6 @@
 
 
 #include <m_pd.h>
-#include "common/mooPdUtils.h"
 
 /* black magic for Microsoft's compiler */
 #ifdef _MSC_VER
@@ -18,13 +17,16 @@
 #pragma warning( disable : 4305 )
 #endif
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
+#ifdef __GNUC__
+# define MOO_UNUSED __attribute__((unused))
+#else
+# define MOO_UNUSED
 #endif
 
 #include <math.h>
 #include <flite/flite.h>
 #include <flite/cst_wave.h>
+
 
 /*--------------------------------------------------------------------
  * DEBUG
