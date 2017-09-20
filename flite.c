@@ -36,7 +36,10 @@
 /*--------------------------------------------------------------------
  * Globals
  *--------------------------------------------------------------------*/
-extern cst_voice *PDFLITE_REGISTER_VOICE();
+#define xconcat(x,y) x ## y
+#define concat(y) xconcat(register_cmu_us_, y)
+#define PDFLITE_REGISTER_VOICE concat(VOICE)
+extern cst_voice *PDFLITE_REGISTER_VOICE ();
 static cst_voice *voice;
 
 #define DEFAULT_BUFSIZE 256
