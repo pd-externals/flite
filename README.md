@@ -1,10 +1,10 @@
-README for PD external distribution 'pd-flite'
+README for Pd external distribution 'pd-flite'
 
 Last updated for version 0.01
 
 # DESCRIPTION
 
-The 'pd-flite' distribution contains a single PD external ("flite"),
+The 'pd-flite' distribution contains a single Pd external ("flite"),
 which provides a high-level text-to-speech interface for English based on
 the 'libflite' library by Alan W Black and Kevin A. Lenzo.
 
@@ -15,7 +15,7 @@ Currently tested only under linux.
 - libflite >= v1.1
 
     The 'libflite' library by Alan W Black and Keven A. Lenzo
-    is required to build the PD 'flite' external.
+    is required to build the Pd 'flite' external.
     It is available from http://cmuflite.org.
 
     You may want to apply the patch 'libflite-noaudio.patch'
@@ -44,7 +44,7 @@ The 'configure' script supports the following options, among others:
 
 - --with-pd-dir=DIR
 
-    Specify PD base directory.
+    Specify Pd base directory.
 
 - --enable-debug , --disable-debug
 
@@ -59,7 +59,7 @@ See the output of './configure --help' for more options.
 
 # ACKNOWLEDGEMENTS
 
-PD by Miller Puckette and others.
+Pd by Miller Puckette and others.
 
 Flite run-time speech synthesis library by Alan W Black
 and Kevin A. Lenzo.
