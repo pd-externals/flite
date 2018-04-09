@@ -30,32 +30,25 @@ First, build and install the libflite distribution.
 Then, issue the following commands to the shell:
 
     cd PACKAGENAME-X.YY  (or wherever you extracted this distribution)
-    ./configure
     make
     make install
 
 # BUILD OPTIONS
 
-The 'configure' script supports the following options, among others:
+The build process allows to specify the voice to use via the
+'VOICE' variable (can be one of `kal16`, `kal`, `awb`, `rms`, `slt`).
 
-- --with-flite-dir=DIR
+If you have installed libflite into a non-standard location, you can specify
+additional search paths via the `LDFLAGS` and `CPPFLAGS` variables.
 
-    Specify the base directory of the libflite distribution.
+Example (using default values):
 
-- --with-pd-dir=DIR
+    make VOICE=kal16 CFLAGS="-I/usr/include/" LDFLAGS="-L/usr/lib/"
 
-    Specify Pd base directory.
 
-- --enable-debug , --disable-debug
+For a list of generic variables to tweak, see also:
 
-    Whether to enable verbose debugging messages.
-    Default=no.
-
-- Environment Variables
-
-    CPPFLAGS, CFLAGS, LDFLAGS, etc.
-
-See the output of './configure --help' for more options.
+    make vars
 
 # ACKNOWLEDGEMENTS
 
