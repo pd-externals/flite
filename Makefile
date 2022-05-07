@@ -25,3 +25,13 @@ ldlibs = -lflite_cmu_us_$(VOICE) -lflite_cmulex -lflite -lm
 # include Makefile.pdlibbuilder from submodule directory 'pd-lib-builder'
 PDLIBBUILDER_DIR=pd-lib-builder/
 include $(PDLIBBUILDER_DIR)/Makefile.pdlibbuilder
+
+localdep_linux: install
+	scripts/localdeps.linux.sh "${installpath}/${lib.name}.${extension}"
+
+localdep_windows: install
+	scripts/localdeps.win.sh "${installpath}/${lib.name}.${extension}"
+
+localdep_macos: install
+	scripts/localdeps.macos.sh "${installpath}/${lib.name}.${extension}"
+
