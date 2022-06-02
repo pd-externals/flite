@@ -6,10 +6,19 @@
  *
  *  PD interface to 'flite' C libraries.
  *
+ * v0.03 updated by Lucas Cordiviola <lucarda27@hotmail.com>
+ *
  *=============================================================================*/
 
 
 #include <m_pd.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <unistd.h>
+
 
 /* black magic for Microsoft's compiler */
 #ifdef _MSC_VER
@@ -24,8 +33,8 @@
 #endif
 
 #include <math.h>
-#include <flite/flite.h>
-#include <flite/cst_wave.h>
+#include <flite.h>
+#include <cst_wave.h>
 
 
 /*--------------------------------------------------------------------
@@ -38,11 +47,14 @@
 /*--------------------------------------------------------------------
  * Globals
  *--------------------------------------------------------------------*/
-#define xconcat(x,y) x ## y
-#define concat(y) xconcat(register_cmu_us_, y)
-#define PDFLITE_REGISTER_VOICE concat(VOICE)
-extern cst_voice *PDFLITE_REGISTER_VOICE ();
-static cst_voice *voice;
+
+cst_voice *register_cmu_us_awb();
+cst_voice *register_cmu_us_kal();
+cst_voice *register_cmu_us_kal16();
+cst_voice *register_cmu_us_rms();
+cst_voice *register_cmu_us_slt();
+
+
 
 #define DEFAULT_BUFSIZE 256
 #define DEFAULT_BUFSTEP 256
@@ -52,10 +64,11 @@ static cst_voice *voice;
  *=====================================================================*/
 
 static const char *flite_description =
-  "flite: Text-to-Speech external v" VERSION " by Bryan Jurish\n"
+  "flite: Text-to-Speech external v" VERSION " \n"
   ;
 //static char *flite_acknowledge = "flite: based on code by ";
 //static char *flite_version = "flite: PD external v%s by Bryan Jurish";
+// "flite: Text-to-Speech external v" VERSION " by Bryan Jurish\n"
 
 
 
@@ -66,16 +79,20 @@ static t_class *flite_class;
 typedef struct _flite
 {
   t_object x_obj;                    /* black magic (probably inheritance-related) */
+  t_canvas  *x_canvas;
   t_symbol *x_arrayname;             /* arrayname (from '_tabwrite' code in $PD_SRC/d_array.c) */
   char     *textbuf;                 /* text buffer (hack) */
   int      bufsize;                  /* text buffer size */
+  char completefilename[MAXPDSTRING];
+  cst_voice *voice;
+  pthread_t tid;
 } t_flite;
 
 
 /*--------------------------------------------------------------------
  * flite_synth : synthesize current text-buffer
  *--------------------------------------------------------------------*/
-void flite_synth(t_flite *x) {
+static void flite_synth(t_flite *x) {
   cst_wave *wave;
   int i,vecsize;
   t_garray *a;
@@ -98,7 +115,7 @@ void flite_synth(t_flite *x) {
 # ifdef FLITE_DEBUG
   post("flite: flite_text_to_wave()");
 # endif
-  wave = flite_text_to_wave(x->textbuf,voice);
+  wave = flite_text_to_wave(x->textbuf,x->voice);
 
   if (!wave) {
     pd_error(x,"flite: synthesis failed for text '%s'", x->textbuf);
@@ -123,6 +140,7 @@ void flite_synth(t_flite *x) {
 # ifdef FLITE_DEBUG
   post("flite: ->write to garray loop<-");
 # endif
+
   for (i = 0; i < wave->num_samples; i++) {
     vec->w_float = wave->samples[i]/32767.0;
     vec++;
@@ -136,12 +154,14 @@ void flite_synth(t_flite *x) {
 
   // -- redraw
   garray_redraw(a);
+  
+  return;
 }
 
 /*--------------------------------------------------------------------
  * flite_text : set text-buffer
  *--------------------------------------------------------------------*/
-void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
+static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
   int i, alen, buffered;
   t_symbol *asym;
 
@@ -196,7 +216,7 @@ void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
 /*--------------------------------------------------------------------
  * flite_list : parse & synthesize text in one swell foop
  *--------------------------------------------------------------------*/
-void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
+static void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
   flite_text(x,s,argc,argv);
   flite_synth(x);
 }
@@ -211,6 +231,117 @@ static void flite_set(t_flite *x, t_symbol *ary) {
 #endif
   x->x_arrayname = ary;
 }
+
+/*--------------------------------------------------------------------
+ * flite_opentextfile : full path of the text file.
+ *--------------------------------------------------------------------*/
+static void flite_opentextfile(t_flite *x, t_symbol *filename) {
+    
+  if(filename->s_name[0] == '/')/*make complete path + filename*/
+  {
+    strcpy(x->completefilename, filename->s_name);
+  }
+  else if( (((filename->s_name[0] >= 'A') && (filename->s_name[0] <= 'Z')) || \
+  ((filename->s_name[0] >= 'a') && (filename->s_name[0] <= 'z'))) && \
+  (filename->s_name[1] == ':') && (filename->s_name[2] == '/') )
+  {
+    strcpy(x->completefilename, filename->s_name);
+  }
+  else
+  {
+    strcpy(x->completefilename, canvas_getdir(x->x_canvas)->s_name);
+    strcat(x->completefilename, "/");
+    strcat(x->completefilename, filename->s_name);
+  }
+  return;  
+}
+
+
+
+/*--------------------------------------------------------------------
+ * flite_do_textfile : read the textfile and synthesize it.
+ *--------------------------------------------------------------------*/
+static void flite_do_textfile(t_flite *x) {
+
+  FILE *fp;
+  fp = fopen(x->completefilename, "r");
+  if(fp <= 0){
+    pd_error(x, "[flite]: can't open file: %s", x->completefilename);
+    return;
+    }
+  fseek(fp, 0, SEEK_END);
+  int len;
+  len = ftell(fp);
+  fseek(fp, 0, SEEK_SET);  
+  x->textbuf = (char *) calloc(len, sizeof(char));
+  fread(x->textbuf, 1, len, fp);
+  fclose(fp);
+  flite_synth(x);  
+  x->textbuf = NULL;
+  
+  return;  
+}
+
+/*--------------------------------------------------------------------
+ * flite_voice : set the voice for the synthesizer
+ *--------------------------------------------------------------------*/
+static void flite_voice(t_flite *x, t_symbol *vox) {
+#ifdef FLITE_DEBUG
+  post("flite_voice: called with arg='%s'", vox->s_name);
+#endif
+
+  const char *voxstring;
+  voxstring = vox->s_name;
+  
+  if (!strcmp(voxstring, "awb")) {
+    x->voice = register_cmu_us_awb();  
+  } 
+  else if (!strcmp(voxstring, "kal")) {
+    x->voice = register_cmu_us_kal();	  
+  }
+  else if (!strcmp(voxstring, "kal16")) {
+    x->voice = register_cmu_us_kal16();	  
+  }
+  else if (!strcmp(voxstring, "rms")) {
+    x->voice = register_cmu_us_rms();	  
+  }
+  else if (!strcmp(voxstring, "slt")) {
+    x->voice = register_cmu_us_slt();	  
+  } else {
+    pd_error(x,"flite: unknown voice '%s'. Possible voices are: 'awb', 'kal', 'kal16', 'rms' or 'slt'.", voxstring );
+    return;	
+  }
+  return;  
+}
+
+/*--------------------------------------------------------------------
+ * flite_textfile : read textfile
+ *--------------------------------------------------------------------*/
+static void flite_textfile(t_flite *x, t_symbol *filename) {
+
+  flite_opentextfile(x, filename);
+  flite_do_textfile(x);
+}
+
+/*--------------------------------------------------------------------
+ * flite_thrd_textfile : threaded read textfile
+ *--------------------------------------------------------------------*/
+static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
+
+  flite_opentextfile(x, filename);
+  pthread_create(&x->tid, NULL, flite_do_textfile, x);
+  	
+}
+
+/*--------------------------------------------------------------------
+ * flite_thrd_synth : threaded flite_synth
+ *--------------------------------------------------------------------*/
+static void flite_thrd_synth(t_flite *x) {
+	
+  pthread_create(&x->tid, NULL, flite_synth, x);
+    
+}
+
 
 
 /*--------------------------------------------------------------------
@@ -231,7 +362,12 @@ static void *flite_new(t_symbol *ary)
 
   // create bang-on-done outlet
   outlet_new(&x->x_obj, &s_bang);
-
+  
+  // default voice  
+  x->voice = register_cmu_us_kal16();
+  
+  x->x_canvas = canvas_getcurrent();
+  
   return (void *)x;
 }
 
@@ -252,8 +388,8 @@ void flite_setup(void) {
 
   // --- setup synth
   flite_init();
-  voice = PDFLITE_REGISTER_VOICE();
 
+  
   // --- register class
   flite_class = class_new(gensym("flite"),
 			  (t_newmethod)flite_new,  // newmethod
@@ -268,7 +404,12 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_set,   gensym("set"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_text,  gensym("text"),  A_GIMME, 0);
   class_addmethod(flite_class, (t_method)flite_synth, gensym("synth"), 0);
-
+  class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
+  class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
+  class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
+  class_addmethod(flite_class, (t_method)flite_thrd_textfile,   gensym("thrd_textfile"),   A_DEFSYM, 0);
+  
+  
   // --- help patch
   //class_sethelpsymbol(flite_class, gensym("flite-help.pd")); /* breaks pd-extended help lookup */
 }
