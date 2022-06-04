@@ -71,11 +71,19 @@ static const char *flite_description =
 // "flite: Text-to-Speech external v" VERSION " by Bryan Jurish\n"
 
 
-
 /*---------------------------------------------------------------------
  * flite
  *---------------------------------------------------------------------*/
 static t_class *flite_class;
+
+typedef enum _thrd_request
+{
+  IDLE = 0,
+  TEXTFILE = 1,
+  SYNTH = 2,
+  QUIT = 3,	
+} t_thrd_request;
+
 typedef struct _flite
 {
   t_object x_obj;                    /* black magic (probably inheritance-related) */
@@ -85,7 +93,10 @@ typedef struct _flite
   int      bufsize;                  /* text buffer size */
   char completefilename[MAXPDSTRING];
   cst_voice *voice;
-  pthread_t tid;
+  t_thrd_request x_requestcode;
+  pthread_mutex_t x_mutex;
+  pthread_cond_t x_requestcondition;
+  pthread_t x_tid;
 } t_flite;
 
 
@@ -328,8 +339,12 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
  *--------------------------------------------------------------------*/
 static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
 
+
+  pthread_mutex_lock(&x->x_mutex);
   flite_opentextfile(x, filename);
-  pthread_create(&x->tid, NULL, flite_do_textfile, x);
+  x->x_requestcode = TEXTFILE;
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);
   	
 }
 
@@ -338,11 +353,45 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
  *--------------------------------------------------------------------*/
 static void flite_thrd_synth(t_flite *x) {
 	
-  pthread_create(&x->tid, NULL, flite_synth, x);
+  pthread_mutex_lock(&x->x_mutex);
+  x->x_requestcode = SYNTH;
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);
     
 }
 
-
+/*--------------------------------------------------------------------
+ * flite_thread : thread
+ *--------------------------------------------------------------------*/
+static void flite_thread(t_flite *x) {
+	
+  while (1) {
+    pthread_mutex_lock(&x->x_mutex);
+	while (x->x_requestcode == IDLE) {
+	  post("pthread_cond_wait(");
+      pthread_cond_wait(&x->x_requestcondition, &x->x_mutex);  
+	} 
+	if (x->x_requestcode == SYNTH)
+    {
+	pthread_mutex_unlock(&x->x_mutex);
+	flite_synth(x);
+	x->x_requestcode = IDLE;
+	//pthread_mutex_lock(&x->x_mutex);
+	
+	}
+	else if (x->x_requestcode == TEXTFILE)
+    {
+	pthread_mutex_unlock(&x->x_mutex);
+    flite_do_textfile(x);
+	x->x_requestcode = IDLE;
+	}
+	else if (x->x_requestcode == QUIT)
+    {
+	break;
+	}
+  }
+  post("thread quit");
+}
 
 /*--------------------------------------------------------------------
  * constructor / destructor
@@ -368,6 +417,11 @@ static void *flite_new(t_symbol *ary)
   
   x->x_canvas = canvas_getcurrent();
   
+  x->x_requestcode = IDLE;
+  pthread_mutex_init(&x->x_mutex, 0);
+  pthread_cond_init(&x->x_requestcondition, 0);
+  pthread_create(&x->x_tid, 0, flite_thread, x);
+  
   return (void *)x;
 }
 
@@ -375,6 +429,14 @@ static void flite_free(t_flite *x) {
   if (x->bufsize && x->textbuf != NULL) {
     freebytes(x->textbuf, x->bufsize);
     x->bufsize = 0;
+	
+	pthread_mutex_lock(&x->x_mutex);
+	x->x_requestcode = QUIT;
+	pthread_cond_signal(&x->x_requestcondition);
+	pthread_mutex_unlock(&x->x_mutex);
+	pthread_join(x->x_tid, NULL);
+	pthread_cond_destroy(&x->x_requestcondition);
+	pthread_mutex_destroy(&x->x_mutex);
   }
 }
 
