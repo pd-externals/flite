@@ -470,11 +470,11 @@ static void flite_free(t_flite *x) {
   pthread_join(x->x_tid, NULL);
   pthread_cond_destroy(&x->x_requestcondition);
   pthread_mutex_destroy(&x->x_mutex);
-  if (x->bufsize && x->textbuf != NULL) {
+  /*if (x->bufsize && x->textbuf != NULL) {
     freebytes(x->textbuf, x->bufsize);
     x->bufsize = 0;
-  }
-  
+  }*/
+  free(x->textbuf);
 }
 
 /*--------------------------------------------------------------------
