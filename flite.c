@@ -221,11 +221,9 @@ static void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
  if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
     return;
-  }
-  //x->x_inprogress = 1; 
+  } 
   flite_text(x,s,argc,argv);
   flite_synth(x);
-  //x->x_inprogress = 0;
   return;
 }
 
@@ -251,10 +249,6 @@ static void flite_set(t_flite *x, t_symbol *ary) {
  *--------------------------------------------------------------------*/
 static void flite_opentextfile(t_flite *x, t_symbol *filename) {
 
-  /*if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }*/
     
   if(filename->s_name[0] == '/')/*make complete path + filename*/
   {
@@ -352,10 +346,8 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
     pd_error(x,"%s", thread_waiting);
     return;
   }
-  //x->x_inprogress = 1;
   flite_opentextfile(x, filename);
   flite_do_textfile(x);
-  //x->x_inprogress = 0;
   return;
 }
 
