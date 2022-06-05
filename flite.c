@@ -176,55 +176,20 @@ static void flite_synth(t_flite *x) {
  * flite_text : set text-buffer
  *--------------------------------------------------------------------*/
 static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
-  int i, alen, buffered;
-  t_symbol *asym;
-
-// -- ugly: just for now
-x->textbuf == NULL;
+  char *buf;
+  int length;
+  t_atom at;
+  t_binbuf*bbuf = binbuf_new();  
   
+  SETSYMBOL(&at, s);
+  binbuf_add(bbuf, 1, &at);
+  binbuf_add(bbuf, argc, argv);
+  binbuf_gettext(bbuf, &buf, &length);
+  binbuf_free(bbuf);
+  x->textbuf = (char *) calloc(length, sizeof(char)); 
+  memcpy(x->textbuf, buf, length);  
+  freebytes(buf, length);
   
-  // -- allocate initial text-buffer if required
-  if (x->textbuf == NULL) {
-    x->bufsize = DEFAULT_BUFSIZE;
-    x->textbuf = getbytes(x->bufsize);
-  }
-  if (x->textbuf == NULL) {
-    pd_error(x,"flite: allocation failed for text buffer");
-    x->bufsize = 0;
-    return;
-  }
-
-  // -- convert args to strings
-  buffered = 0;
-  for (i = 0; i < argc; i++) {
-    asym = atom_gensym(argv);
-    alen = 1+strlen(asym->s_name);
-
-    // -- reallocate if necessary
-    while (buffered + alen > x->bufsize) {
-      x->textbuf = resizebytes(x->textbuf,x->bufsize,x->bufsize+DEFAULT_BUFSTEP);
-      x->bufsize = x->bufsize+DEFAULT_BUFSTEP;
-      if (x->textbuf == NULL) {
-    pd_error(x,"flite: allocation failed for text buffer");
-    x->bufsize = 0;
-    return;
-      }
-    }
-    
-    // -- append arg-string to text-buf
-    if (i == 0) {
-      strcpy(x->textbuf+buffered, asym->s_name);
-      buffered += alen-1;
-    } else {
-      *(x->textbuf+buffered) = ' ';
-      strcpy(x->textbuf+buffered+1, asym->s_name);
-      buffered += alen;
-    }
-    
-    // -- increment/decrement
-    argv++;
-  }
-
 #ifdef FLITE_DEBUG
   debug("flite_debug: got text='%s'\n", x->textbuf);
 #endif
