@@ -32,6 +32,9 @@
 # define MOO_UNUSED
 #endif
 
+
+#define debug(fmt, args...) fprintf(stderr, fmt, ##args);
+
 #include <math.h>
 #include <flite.h>
 #include <cst_wave.h>
@@ -81,7 +84,7 @@ typedef enum _thrd_request
   IDLE = 0,
   TEXTFILE = 1,
   SYNTH = 2,
-  QUIT = 3,	
+  QUIT = 3, 
 } t_thrd_request;
 
 typedef struct _flite
@@ -110,7 +113,7 @@ static void flite_synth(t_flite *x) {
   t_word *vec;
 
 # ifdef FLITE_DEBUG
-  post("flite: got message 'synth'");
+  debug("flite: got message 'synth'\n");
 # endif
 
   // -- sanity checks
@@ -124,7 +127,7 @@ static void flite_synth(t_flite *x) {
   }
 
 # ifdef FLITE_DEBUG
-  post("flite: flite_text_to_wave()");
+  debug("flite: flite_text_to_wave()\n");
 # endif
   wave = flite_text_to_wave(x->textbuf,x->voice);
 
@@ -135,13 +138,13 @@ static void flite_synth(t_flite *x) {
 
   // -- resample
 # ifdef FLITE_DEBUG
-  post("flite: cst_wave_resample()");
+  debug("flite: cst_wave_resample()\n");
 # endif
   cst_wave_resample(wave,sys_getsr());
 
   // -- resize & write to our array
 # ifdef FLITE_DEBUG
-  post("flite: garray_resize(%d)", wave->num_samples);
+  debug("flite: garray_resize(%d)\n", wave->num_samples);
 # endif
 
   garray_resize(a, wave->num_samples);
@@ -149,7 +152,7 @@ static void flite_synth(t_flite *x) {
     pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
 
 # ifdef FLITE_DEBUG
-  post("flite: ->write to garray loop<-");
+  debug("flite: ->write to garray loop<-\n");
 # endif
 
   for (i = 0; i < wave->num_samples; i++) {
@@ -176,6 +179,10 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
   int i, alen, buffered;
   t_symbol *asym;
 
+// -- ugly: just for now
+x->textbuf == NULL;
+  
+  
   // -- allocate initial text-buffer if required
   if (x->textbuf == NULL) {
     x->bufsize = DEFAULT_BUFSIZE;
@@ -198,9 +205,9 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
       x->textbuf = resizebytes(x->textbuf,x->bufsize,x->bufsize+DEFAULT_BUFSTEP);
       x->bufsize = x->bufsize+DEFAULT_BUFSTEP;
       if (x->textbuf == NULL) {
-	pd_error(x,"flite: allocation failed for text buffer");
-	x->bufsize = 0;
-	return;
+    pd_error(x,"flite: allocation failed for text buffer");
+    x->bufsize = 0;
+    return;
       }
     }
     
@@ -219,7 +226,7 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
   }
 
 #ifdef FLITE_DEBUG
-  post("flite_debug: got text='%s'", x->textbuf);
+  debug("flite_debug: got text='%s'\n", x->textbuf);
 #endif
 }
 
@@ -238,7 +245,7 @@ static void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
  *--------------------------------------------------------------------*/
 static void flite_set(t_flite *x, t_symbol *ary) {
 #ifdef FLITE_DEBUG
-  post("flite_set: called with arg='%s'", ary->s_name);
+  debug("flite_set: called with arg='%s'\n", ary->s_name);
 #endif
   x->x_arrayname = ary;
 }
@@ -298,7 +305,7 @@ static void flite_do_textfile(t_flite *x) {
  *--------------------------------------------------------------------*/
 static void flite_voice(t_flite *x, t_symbol *vox) {
 #ifdef FLITE_DEBUG
-  post("flite_voice: called with arg='%s'", vox->s_name);
+  debug("flite_voice: called with arg='%s'\n", vox->s_name);
 #endif
 
   const char *voxstring;
@@ -308,19 +315,19 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
     x->voice = register_cmu_us_awb();  
   } 
   else if (!strcmp(voxstring, "kal")) {
-    x->voice = register_cmu_us_kal();	  
+    x->voice = register_cmu_us_kal();     
   }
   else if (!strcmp(voxstring, "kal16")) {
-    x->voice = register_cmu_us_kal16();	  
+    x->voice = register_cmu_us_kal16();   
   }
   else if (!strcmp(voxstring, "rms")) {
-    x->voice = register_cmu_us_rms();	  
+    x->voice = register_cmu_us_rms();     
   }
   else if (!strcmp(voxstring, "slt")) {
-    x->voice = register_cmu_us_slt();	  
+    x->voice = register_cmu_us_slt();     
   } else {
     pd_error(x,"flite: unknown voice '%s'. Possible voices are: 'awb', 'kal', 'kal16', 'rms' or 'slt'.", voxstring );
-    return;	
+    return; 
   }
   return;  
 }
@@ -345,16 +352,17 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
   x->x_requestcode = TEXTFILE;
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);
-  	
+    
 }
 
 /*--------------------------------------------------------------------
  * flite_thrd_synth : threaded flite_synth
  *--------------------------------------------------------------------*/
 static void flite_thrd_synth(t_flite *x) {
-	
+    
   pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = SYNTH;
+  //pthread_cond_signal(&x->x_requestcondition);
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);
     
@@ -364,33 +372,43 @@ static void flite_thrd_synth(t_flite *x) {
  * flite_thread : thread
  *--------------------------------------------------------------------*/
 static void flite_thread(t_flite *x) {
-	
+    
   while (1) {
     pthread_mutex_lock(&x->x_mutex);
-	while (x->x_requestcode == IDLE) {
-	  post("pthread_cond_wait(");
+    while (x->x_requestcode == IDLE) {
+# ifdef FLITE_DEBUG
+  debug("pthread_cond_wait(\n");
+# endif	
       pthread_cond_wait(&x->x_requestcondition, &x->x_mutex);  
-	} 
-	if (x->x_requestcode == SYNTH)
+    } 
+    if (x->x_requestcode == SYNTH)
     {
-	pthread_mutex_unlock(&x->x_mutex);
-	flite_synth(x);
-	x->x_requestcode = IDLE;
-	//pthread_mutex_lock(&x->x_mutex);
-	
-	}
-	else if (x->x_requestcode == TEXTFILE)
+    pthread_mutex_unlock(&x->x_mutex);
+    pthread_mutex_lock(&x->x_mutex);
+    x->x_requestcode = IDLE;
+# ifdef FLITE_DEBUG
+  debug("thread synth\n");
+# endif
+    flite_synth(x);
+    pthread_mutex_unlock(&x->x_mutex);  
+    }
+    else if (x->x_requestcode == TEXTFILE)
     {
-	pthread_mutex_unlock(&x->x_mutex);
+    pthread_mutex_unlock(&x->x_mutex);
+    pthread_mutex_lock(&x->x_mutex);
+    x->x_requestcode = IDLE;
     flite_do_textfile(x);
-	x->x_requestcode = IDLE;
-	}
-	else if (x->x_requestcode == QUIT)
+    pthread_mutex_unlock(&x->x_mutex);
+    }
+    else if (x->x_requestcode == QUIT)
     {
-	break;
-	}
+    break;
+    }
   }
-  post("thread quit");
+# ifdef FLITE_DEBUG
+  debug("thread quit\n");
+# endif
+  
 }
 
 /*--------------------------------------------------------------------
@@ -426,18 +444,19 @@ static void *flite_new(t_symbol *ary)
 }
 
 static void flite_free(t_flite *x) {
+	
+  pthread_mutex_lock(&x->x_mutex);
+  x->x_requestcode = QUIT;
+  pthread_cond_signal(&x->x_requestcondition);
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_join(x->x_tid, NULL);
+  pthread_cond_destroy(&x->x_requestcondition);
+  pthread_mutex_destroy(&x->x_mutex);
   if (x->bufsize && x->textbuf != NULL) {
     freebytes(x->textbuf, x->bufsize);
     x->bufsize = 0;
-	
-	pthread_mutex_lock(&x->x_mutex);
-	x->x_requestcode = QUIT;
-	pthread_cond_signal(&x->x_requestcondition);
-	pthread_mutex_unlock(&x->x_mutex);
-	pthread_join(x->x_tid, NULL);
-	pthread_cond_destroy(&x->x_requestcondition);
-	pthread_mutex_destroy(&x->x_mutex);
   }
+  
 }
 
 /*--------------------------------------------------------------------
@@ -454,12 +473,12 @@ void flite_setup(void) {
   
   // --- register class
   flite_class = class_new(gensym("flite"),
-			  (t_newmethod)flite_new,  // newmethod
-			  (t_method)flite_free,    // freemethod
-			  sizeof(t_flite),         // size
-			  CLASS_DEFAULT,           // flags
-			  A_DEFSYM,                // arg1: table-name
-			  0);
+              (t_newmethod)flite_new,  // newmethod
+              (t_method)flite_free,    // freemethod
+              sizeof(t_flite),         // size
+              CLASS_DEFAULT,           // flags
+              A_DEFSYM,                // arg1: table-name
+              0);
 
   // --- class methods
   class_addlist(flite_class, flite_list);

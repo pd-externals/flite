@@ -281,7 +281,7 @@ datafiles = \
 	README.md flite-meta.pd \
 	
 
-#alldebug: CPPFLAGS += -DFLITE_DEBUG=1
+#alldebug: CPPFLAGS+=-DFLITE_DEBUG=1
 
 
 # include Makefile.pdlibbuilder from submodule directory 'pd-lib-builder'
