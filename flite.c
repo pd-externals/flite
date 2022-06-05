@@ -161,7 +161,7 @@ static void flite_synth(t_flite *x) {
   }
 
   // -- outlet synth-done-bang
-  outlet_bang(x->x_obj.ob_outlet);
+  //outlet_bang(x->x_obj.ob_outlet);
 
   // -- cleanup
   delete_wave(wave);
@@ -181,14 +181,14 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
   t_atom at;
   t_binbuf*bbuf = binbuf_new();  
   
-  SETSYMBOL(&at, s);
-  binbuf_add(bbuf, 1, &at);
+  //SETSYMBOL(&at, s);
+  //binbuf_add(bbuf, 1, &at);
   binbuf_add(bbuf, argc, argv);
   binbuf_gettext(bbuf, &buf, &length);
   binbuf_free(bbuf);
-  x->textbuf = (char *) calloc(length, sizeof(char)); 
+  x->textbuf = (char *) calloc(length+1, sizeof(char)); 
   memcpy(x->textbuf, buf, length);  
-  freebytes(buf, length);
+  freebytes(buf, length+1);
   
 #ifdef FLITE_DEBUG
   debug("flite_debug: got text='%s'\n", x->textbuf);
