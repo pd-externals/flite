@@ -108,7 +108,6 @@ typedef struct _flite
   t_symbol *x_arrayname;             /* arrayname (from '_tabwrite' code in $PD_SRC/d_array.c) */
   char     *textbuf;                 /* text buffer (hack) */
   int      bufsize;                  /* text buffer size */
-  char completefilename[MAXPDSTRING];
   char textfile[MAXPDSTRING];
   char voxfile[MAXPDSTRING];
   char x_inprogress;
@@ -320,7 +319,7 @@ static int flite_filex(t_flite *x, t_symbol *name, int gowhere) {
   int fd;
   fd = canvas_open(x->x_canvas, filename, "", realdir, &realname, MAXPDSTRING, 0);
       if(fd < 0){
-          pd_error(x, "[flite]: can't find file %s", filename);
+          pd_error(x, "[flite]: can't find file: %s", filename);
           x->x_inprogress = 0;
           return 0;
         }
