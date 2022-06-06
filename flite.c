@@ -137,10 +137,12 @@ static void flite_synth(t_flite *x) {
   // -- sanity checks
   if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
     pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
+    x->x_inprogress = 0;
     return;
   }
   if (!x->textbuf) {
     pd_error(x,"flite: attempt to synthesize empty text-buffer!");
+    x->x_inprogress = 0;
     return;
   }
 
@@ -151,6 +153,7 @@ static void flite_synth(t_flite *x) {
 
   if (!wave) {
     pd_error(x,"flite: synthesis failed for text '%s'", x->textbuf);
+    x->x_inprogress = 0;
     return;
   }
 
@@ -168,16 +171,22 @@ static void flite_synth(t_flite *x) {
   // -- sanity checks again for the thread if the patch has been closed
   if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
     x->x_inprogress = 0;
-	return;
+    return;
   }
 
-  garray_resize(a, wave->num_samples);
+  //garray_resize(a, wave->num_samples); // seems here is the problem when threaded and on graphical array
+  
+  // this attempt didn't fix the above but is better to use garray_resize_long()
+  garray_resize_long(a, (long) wave->num_samples); 
+
+ 
   if (!garray_getfloatwords(a, &vecsize, &vec))
     pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
 
 # ifdef FLITE_DEBUG
   debug("flite: ->write to garray loop<-\n");
 # endif
+
 
   for (i = 0; i < wave->num_samples; i++) {
     vec->w_float = wave->samples[i]/32767.0;
@@ -193,6 +202,7 @@ static void flite_synth(t_flite *x) {
   // -- redraw
   garray_redraw(a);
   
+ 
   x->x_inprogress = 0;
   
   return;
@@ -247,7 +257,7 @@ static void flite_thrd_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom
  * flite_text : set text-buffer
  *--------------------------------------------------------------------*/
 static void flite_do_thrd_text(t_flite *x) {
-	
+    
   char *buf;
   int length;
   if (x->x_inprogress) {
@@ -268,7 +278,7 @@ static void flite_do_thrd_text(t_flite *x) {
   debug("flite_debug: got text='%s'\n", x->textbuf);
 #endif
   return;
-	
+    
 }
 
 /*--------------------------------------------------------------------
@@ -333,7 +343,7 @@ static void flite_opentextfile(t_flite *x, t_symbol *filename) {
  * flite_do_textfile : read the textfile and synthesize it.
  *--------------------------------------------------------------------*/
 static void flite_do_textfile(t_flite *x) {
-	
+    
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
     return;
@@ -343,6 +353,7 @@ static void flite_do_textfile(t_flite *x) {
   fp = fopen(x->completefilename, "r");
   if(fp <= 0){
     pd_error(x, "[flite]: can't open file: %s", x->completefilename);
+    x->x_inprogress = 0;
     return;
     }
   fseek(fp, 0, SEEK_END);
@@ -361,7 +372,7 @@ static void flite_do_textfile(t_flite *x) {
  * flite_voice : set the voice for the synthesizer
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *name) {
-	
+    
   char completefilename[MAXPDSTRING];
 
   const char* filename = name->s_name;
@@ -373,6 +384,7 @@ static void flite_voice_file(t_flite *x, t_symbol *name) {
       fd = canvas_open(x->x_canvas, filename, ext, realdir, &realname, MAXPDSTRING, 0);
       if(fd < 0){
           pd_error(x, "[flite]: can't find file %s", filename);
+          x->x_inprogress = 0;
           return;
         }
     }
@@ -486,7 +498,7 @@ static void flite_thread(t_flite *x) {
     while (x->x_requestcode == IDLE) {
 # ifdef FLITE_DEBUG
   debug("pthread_cond_wait(\n");
-# endif	
+# endif 
       pthread_cond_wait(&x->x_requestcondition, &x->x_mutex);  
     } 
     if (x->x_requestcode == SYNTH)
@@ -498,9 +510,9 @@ static void flite_thread(t_flite *x) {
   debug("thread synth\n");
 # endif
     flite_synth(x);
-    pthread_mutex_unlock(&x->x_mutex);	
+    pthread_mutex_unlock(&x->x_mutex);  
     }
-	else if (x->x_requestcode == TEXT)
+    else if (x->x_requestcode == TEXT)
     {
     pthread_mutex_unlock(&x->x_mutex);
     pthread_mutex_lock(&x->x_mutex);
@@ -560,16 +572,16 @@ static void *flite_new(t_symbol *ary)
 }
 
 static void flite_free(t_flite *x) {
-	
+    
   while(x->x_inprogress) {
   sleep(1);
    // when we get to garray_resize() we crash if we close the patch on an ongoing "threaded synth"
   }
-	
+    
 # ifdef FLITE_DEBUG
   debug("free\n");
 # endif
-	
+    
   pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = QUIT;
   pthread_mutex_unlock(&x->x_mutex);
