@@ -85,9 +85,11 @@ static t_class *flite_class;
 typedef enum _thrd_request
 {
   IDLE = 0,
-  TEXTFILE = 1,
-  SYNTH = 2,
-  QUIT = 3, 
+  LIST = 1,
+  TEXT = 2,
+  TEXTFILE = 4,
+  SYNTH = 5,
+  QUIT = 6, 
 } t_thrd_request;
 
 typedef struct _flite
@@ -104,6 +106,8 @@ typedef struct _flite
   pthread_mutex_t x_mutex;
   pthread_cond_t x_requestcondition;
   pthread_t x_tid;
+  int x_argc;
+  t_atom *x_argv;
 } t_flite;
 
 
@@ -212,6 +216,51 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
   return;
 }
 
+/*--------------------------------------------------------------------
+ * flite_thrd_text : threaded set text-buffer
+ *--------------------------------------------------------------------*/
+static void flite_thrd_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
+ 
+ if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }
+  x->x_argc = argc;
+  x->x_argv = argv;
+  pthread_mutex_lock(&x->x_mutex);
+  x->x_requestcode = TEXT;
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);  
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_text : set text-buffer
+ *--------------------------------------------------------------------*/
+static void flite_do_thrd_text(t_flite *x) {
+	
+  char *buf;
+  int length;
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }
+  x->x_inprogress = 1;  
+  t_binbuf*bbuf = binbuf_new();
+  binbuf_add(bbuf, x->x_argc, x->x_argv);
+  binbuf_gettext(bbuf, &buf, &length);
+  binbuf_free(bbuf);
+  x->textbuf = (char *) calloc(length+1, sizeof(char)); 
+  memcpy(x->textbuf, buf, length);  
+  free(buf);
+  x->x_inprogress = 0;
+  
+#ifdef FLITE_DEBUG
+  debug("flite_debug: got text='%s'\n", x->textbuf);
+#endif
+  return;
+	
+}
 
 /*--------------------------------------------------------------------
  * flite_list : parse & synthesize text in one swell foop
@@ -366,6 +415,7 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
   x->x_requestcode = TEXTFILE;
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);
+  //x->x_inprogress = 0;
   return;  
 }
 
@@ -377,7 +427,8 @@ static void flite_thrd_synth(t_flite *x) {
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
     return;
-  }    
+  }
+  
   pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = SYNTH;
   //pthread_cond_signal(&x->x_requestcondition);
@@ -408,7 +459,15 @@ static void flite_thread(t_flite *x) {
   debug("thread synth\n");
 # endif
     flite_synth(x);
-    pthread_mutex_unlock(&x->x_mutex);  
+    pthread_mutex_unlock(&x->x_mutex);	
+    }
+	else if (x->x_requestcode == TEXT)
+    {
+    pthread_mutex_unlock(&x->x_mutex);
+    pthread_mutex_lock(&x->x_mutex);
+    x->x_requestcode = IDLE;
+    flite_do_thrd_text(x);
+    pthread_mutex_unlock(&x->x_mutex);
     }
     else if (x->x_requestcode == TEXTFILE)
     {
@@ -505,9 +564,9 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_synth, gensym("synth"), 0);
   class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
+  class_addmethod(flite_class, (t_method)flite_thrd_text,  gensym("thrd_text"),  A_GIMME, 0);
   class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
   class_addmethod(flite_class, (t_method)flite_thrd_textfile,   gensym("thrd_textfile"),   A_DEFSYM, 0);
-  
   
   // --- help patch
   //class_sethelpsymbol(flite_class, gensym("flite-help.pd")); /* breaks pd-extended help lookup */
