@@ -103,7 +103,6 @@ typedef struct _flite
   char     *textbuf;                 /* text buffer (hack) */
   int      bufsize;                  /* text buffer size */
   char completefilename[MAXPDSTRING];
-  char completevoxfilename[MAXPDSTRING];
   char x_inprogress;
   cst_voice *voice;
   t_thrd_request x_requestcode;
@@ -215,7 +214,6 @@ static void flite_synth(t_flite *x) {
 static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
   char *buf;
   int length;
-  t_atom at;
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
     return;
