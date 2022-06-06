@@ -165,6 +165,12 @@ static void flite_synth(t_flite *x) {
   debug("flite: garray_resize(%d)\n", wave->num_samples);
 # endif
 
+  // -- sanity checks again for the thread if the patch has been closed
+  if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+    x->x_inprogress = 0;
+	return;
+  }
+
   garray_resize(a, wave->num_samples);
   if (!garray_getfloatwords(a, &vecsize, &vec))
     pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
@@ -555,15 +561,8 @@ static void *flite_new(t_symbol *ary)
 
 static void flite_free(t_flite *x) {
 	
-  while(1) {
-# ifdef FLITE_DEBUG
-  debug("wait\n");
-# endif
-    if(x->x_inprogress) {
-    sleep(100000);
-    } else {
-    break;
-   }
+  while(x->x_inprogress) {
+  sleep(1);
    // when we get to garray_resize() we crash if we close the patch on an ongoing "threaded synth"
   }
 	
