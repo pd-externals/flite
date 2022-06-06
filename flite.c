@@ -71,7 +71,7 @@ static const char *flite_description =
   
 static const char *thread_waiting = "flite: Wait for the running thread to finish";
   
-  ;
+
 //static char *flite_acknowledge = "flite: based on code by ";
 //static char *flite_version = "flite: PD external v%s by Bryan Jurish";
 // "flite: Text-to-Speech external v" VERSION " by Bryan Jurish\n"
@@ -87,9 +87,9 @@ typedef enum _thrd_request
   IDLE = 0,
   LIST = 1,
   TEXT = 2,
-  TEXTFILE = 4,
-  SYNTH = 5,
-  QUIT = 6, 
+  TEXTFILE = 3,
+  SYNTH = 4,
+  QUIT = 5, 
 } t_thrd_request;
 
 typedef struct _flite
@@ -351,6 +351,35 @@ static void flite_do_textfile(t_flite *x) {
 /*--------------------------------------------------------------------
  * flite_voice : set the voice for the synthesizer
  *--------------------------------------------------------------------*/
+static void flite_voice_file(t_flite *x, t_symbol *name) {
+	
+  char completefilename[MAXPDSTRING];
+
+  const char* filename = name->s_name;
+  const char* ext = strrchr(filename, '.');
+  char realdir[MAXPDSTRING], *realname = NULL;
+  int fd;
+    if(ext && !strchr(ext, '/')){ // extension already supplied, no default extension
+      ext = "";
+      fd = canvas_open(x->x_canvas, filename, ext, realdir, &realname, MAXPDSTRING, 0);
+      if(fd < 0){
+          pd_error(x, "[flite]: can't find file %s", filename);
+          return;
+        }
+    }
+  strcpy(completefilename, realdir);
+  strcat(completefilename, "/");
+  strcat(completefilename, realname);
+#ifdef FLITE_DEBUG
+  debug("flite_voice: called with arg='%s'\n", completefilename);
+#endif
+	
+	x->voice = flite_voice_load(completefilename);
+}
+
+/*--------------------------------------------------------------------
+ * flite_voice : set the voice for the synthesizer
+ *--------------------------------------------------------------------*/
 static void flite_voice(t_flite *x, t_symbol *vox) {
 
   if (x->x_inprogress) {
@@ -522,10 +551,26 @@ static void *flite_new(t_symbol *ary)
 
 static void flite_free(t_flite *x) {
 	
+  while(1) {
+# ifdef FLITE_DEBUG
+  debug("wait\n");
+# endif
+    if(x->x_inprogress) {
+    sleep(100000);
+    } else {
+    break;
+   }
+   // when we get to garray_resize() we crash if we close the patch on an ongoing "threaded synth"
+  }
+	
+# ifdef FLITE_DEBUG
+  debug("free\n");
+# endif
+	
   pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = QUIT;
-  pthread_cond_signal(&x->x_requestcondition);
   pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);
   pthread_join(x->x_tid, NULL);
   pthread_cond_destroy(&x->x_requestcondition);
   pthread_mutex_destroy(&x->x_mutex);
@@ -563,6 +608,7 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_text,  gensym("text"),  A_GIMME, 0);
   class_addmethod(flite_class, (t_method)flite_synth, gensym("synth"), 0);
   class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
+  class_addmethod(flite_class, (t_method)flite_voice_file,   gensym("voice_file"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_thrd_text,  gensym("thrd_text"),  A_GIMME, 0);
   class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
