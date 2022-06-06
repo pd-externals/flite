@@ -244,9 +244,9 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
 }
 
 /*--------------------------------------------------------------------
- * flite_thrd_text : threaded set text-buffer
+ * flite_thrd_textbuffer : call threaded set text-buffer
  *--------------------------------------------------------------------*/
-static void flite_thrd_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
+static void flite_thrd_textbuffer(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
  
  if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
@@ -262,9 +262,9 @@ static void flite_thrd_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom
 }
 
 /*--------------------------------------------------------------------
- * flite_text : set text-buffer
+ * flite_do_thrd_textbuffer : threaded text-buffer
  *--------------------------------------------------------------------*/
-static void flite_do_thrd_text(t_flite *x) {
+static void flite_do_thrd_textbuffer(t_flite *x) {
     
   char *buf;
   int length;
@@ -322,38 +322,7 @@ static void flite_set(t_flite *x, t_symbol *ary) {
 
 
 /*--------------------------------------------------------------------
- * flite_do_textfile : read the textfile and synthesize it.
- *--------------------------------------------------------------------*/
-static void flite_do_textfile(t_flite *x) {
-    
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }
-  x->x_inprogress = 1;
-  FILE *fp;
-  fp = fopen(x->textfile, "r");
-  if(fp <= 0){
-    pd_error(x, "[flite]: can't open file: %s", x->completefilename);
-    x->x_inprogress = 0;
-    return;
-    }
-  fseek(fp, 0, SEEK_END);
-  int len;
-  len = ftell(fp);
-  fseek(fp, 0, SEEK_SET);  
-  x->textbuf = (char *) calloc(len+1, sizeof(char));
-  fread(x->textbuf, 1, len, fp);
-  fclose(fp);
-  x->x_inprogress = 0;
-  flite_synth(x);    
-  return;  
-}
-
-
-
-/*--------------------------------------------------------------------
- * flite_filex : 
+ * flite_filex : get the full path of the file if it exist.
  *--------------------------------------------------------------------*/
 static int flite_filex(t_flite *x, t_symbol *name, int gowhere) {
     
@@ -382,7 +351,7 @@ static int flite_filex(t_flite *x, t_symbol *name, int gowhere) {
 }
 
 /*--------------------------------------------------------------------
- * flite_voice_file : open a voice for the synthesizer
+ * flite_voice_file : open a voice file for the synthesizer and use it.
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *name) {
     
@@ -437,6 +406,29 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
   return;  
 }
 
+/*--------------------------------------------------------------------
+ * flite_do_textfile : read the textfile and synthesize it.
+ *--------------------------------------------------------------------*/
+static void flite_do_textfile(t_flite *x) {
+    
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }
+  x->x_inprogress = 1;
+  FILE *fp;
+  fp = fopen(x->textfile, "r");
+  fseek(fp, 0, SEEK_END);
+  int len;
+  len = ftell(fp);
+  fseek(fp, 0, SEEK_SET);  
+  x->textbuf = (char *) calloc(len+1, sizeof(char));
+  fread(x->textbuf, 1, len, fp);
+  fclose(fp);
+  x->x_inprogress = 0;
+  flite_synth(x);    
+  return;  
+}
 
 /*--------------------------------------------------------------------
  * flite_textfile : read textfile
@@ -453,6 +445,7 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
   flite_do_textfile(x);
   return;
 }
+
 
 /*--------------------------------------------------------------------
  * flite_thrd_textfile : threaded read textfile
@@ -472,7 +465,6 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
   x->x_requestcode = TEXTFILE;
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);
-  //x->x_inprogress = 0;
   return;  
 }
 
@@ -488,7 +480,6 @@ static void flite_thrd_synth(t_flite *x) {
   
   pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = SYNTH;
-  //pthread_cond_signal(&x->x_requestcondition);
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);
   return;  
@@ -523,7 +514,7 @@ static void flite_thread(t_flite *x) {
     pthread_mutex_unlock(&x->x_mutex);
     pthread_mutex_lock(&x->x_mutex);
     x->x_requestcode = IDLE;
-    flite_do_thrd_text(x);
+    flite_do_thrd_textbuffer(x);
     pthread_mutex_unlock(&x->x_mutex);
     }
     else if (x->x_requestcode == TEXTFILE)
@@ -631,7 +622,7 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_voice_file,   gensym("voice_file"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
-  class_addmethod(flite_class, (t_method)flite_thrd_text,  gensym("thrd_text"),  A_GIMME, 0);
+  class_addmethod(flite_class, (t_method)flite_thrd_textbuffer,  gensym("thrd_text"),  A_GIMME, 0);
   class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
   class_addmethod(flite_class, (t_method)flite_thrd_textfile,   gensym("thrd_textfile"),   A_DEFSYM, 0);
   
