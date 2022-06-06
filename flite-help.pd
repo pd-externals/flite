@@ -127,7 +127,7 @@ playing., f 46;
 21;
 #X obj 83 192 list prepend text;
 #X msg 70 500 voice_file \$1;
-#X msg 71 461 symbol cmu_us_fem.flitevox;
+#X msg 71 461 symbol cmu_us_ljm.flitevox;
 #X connect 10 0 48 0;
 #X connect 11 0 48 0;
 #X connect 12 0 48 0;

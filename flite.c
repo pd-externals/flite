@@ -57,6 +57,9 @@ cst_voice *register_cmu_us_kal16();
 cst_voice *register_cmu_us_rms();
 cst_voice *register_cmu_us_slt();
 
+void usenglish_init(cst_voice *v);
+cst_lexicon *cmulex_init(void);
+
 
 
 #define DEFAULT_BUFSIZE 256
@@ -373,8 +376,9 @@ static void flite_voice_file(t_flite *x, t_symbol *name) {
 #ifdef FLITE_DEBUG
   debug("flite_voice: called with arg='%s'\n", completefilename);
 #endif
-	
-	x->voice = flite_voice_load(completefilename);
+  flite_add_lang("eng",usenglish_init,cmulex_init);
+  flite_add_lang("usenglish",usenglish_init,cmulex_init);
+  x->voice = flite_voice_load(completefilename);
 }
 
 /*--------------------------------------------------------------------
