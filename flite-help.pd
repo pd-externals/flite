@@ -115,19 +115,20 @@ test 123 test 123 test 123 test 123 test 123 test 123 test 123;
 #X msg 515 143 set words;
 #X text 159 243 "threaded" synthesis of the current text buffer;
 #X text 362 530 threaded version, f 18;
-#X text 277 442 threaded, f 10;
+#X text 276 448 threaded, f 10;
 #X obj 159 445 list prepend 0;
-#X msg 228 420 ./README.md;
 #X text 498 392 Warnings: better not use graphical arrays for threaded
 synthesis. Also be careful to not synthesize to an array which is currently
 playing., f 46;
 #X text 401 638 v0.03 updated by Lucas Cordiviola;
 #X obj 76 216 list trim;
-#X text 238 175 Threaded "text" message sets input text-buffer, f
+#X text 207 175 Threaded "text" message sets input text-buffer, f
 21;
 #X obj 83 192 list prepend text;
 #X msg 122 391 voice_file \$1;
 #X msg 128 371 symbol cmu_us_ljm.flitevox;
+#X text 237 392 load a .flitevox voice file (english);
+#X msg 228 420 ./README.md;
 #X connect 10 0 48 0;
 #X connect 11 0 48 0;
 #X connect 12 0 48 0;
@@ -148,7 +149,7 @@ playing., f 46;
 #X connect 39 0 60 0;
 #X connect 40 0 39 0;
 #X connect 43 0 48 0;
-#X connect 44 0 66 0;
+#X connect 44 0 65 0;
 #X connect 45 0 44 0;
 #X connect 46 0 48 0;
 #X connect 48 0 3 0;
@@ -163,8 +164,8 @@ playing., f 46;
 #X connect 55 0 48 0;
 #X connect 56 0 49 0;
 #X connect 60 0 51 0;
-#X connect 61 0 60 0;
-#X connect 64 0 48 0;
-#X connect 66 0 64 0;
-#X connect 67 0 48 0;
-#X connect 68 0 67 0;
+#X connect 63 0 48 0;
+#X connect 65 0 63 0;
+#X connect 66 0 48 0;
+#X connect 67 0 66 0;
+#X connect 69 0 60 0;

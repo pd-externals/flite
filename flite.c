@@ -95,6 +95,12 @@ typedef enum _thrd_request
   QUIT = 5, 
 } t_thrd_request;
 
+typedef enum _filex
+{
+  FILETEXT = 0,
+  FILEVOX = 1, 
+} t_filex;
+
 typedef struct _flite
 {
   t_object x_obj;                    /* black magic (probably inheritance-related) */
@@ -103,9 +109,12 @@ typedef struct _flite
   char     *textbuf;                 /* text buffer (hack) */
   int      bufsize;                  /* text buffer size */
   char completefilename[MAXPDSTRING];
+  char textfile[MAXPDSTRING];
+  char voxfile[MAXPDSTRING];
   char x_inprogress;
   cst_voice *voice;
   t_thrd_request x_requestcode;
+  t_filex x_filex;
   pthread_mutex_t x_mutex;
   pthread_cond_t x_requestcondition;
   pthread_t x_tid;
@@ -311,32 +320,6 @@ static void flite_set(t_flite *x, t_symbol *ary) {
   return;
 }
 
-/*--------------------------------------------------------------------
- * flite_opentextfile : full path of the text file.
- *--------------------------------------------------------------------*/
-static void flite_opentextfile(t_flite *x, t_symbol *filename) {
-
-    
-  if(filename->s_name[0] == '/')/*make complete path + filename*/
-  {
-    strcpy(x->completefilename, filename->s_name);
-  }
-  else if( (((filename->s_name[0] >= 'A') && (filename->s_name[0] <= 'Z')) || \
-  ((filename->s_name[0] >= 'a') && (filename->s_name[0] <= 'z'))) && \
-  (filename->s_name[1] == ':') && (filename->s_name[2] == '/') )
-  {
-    strcpy(x->completefilename, filename->s_name);
-  }
-  else
-  {
-    strcpy(x->completefilename, canvas_getdir(x->x_canvas)->s_name);
-    strcat(x->completefilename, "/");
-    strcat(x->completefilename, filename->s_name);
-  }
-  return;  
-}
-
-
 
 /*--------------------------------------------------------------------
  * flite_do_textfile : read the textfile and synthesize it.
@@ -349,7 +332,7 @@ static void flite_do_textfile(t_flite *x) {
   }
   x->x_inprogress = 1;
   FILE *fp;
-  fp = fopen(x->completefilename, "r");
+  fp = fopen(x->textfile, "r");
   if(fp <= 0){
     pd_error(x, "[flite]: can't open file: %s", x->completefilename);
     x->x_inprogress = 0;
@@ -367,35 +350,53 @@ static void flite_do_textfile(t_flite *x) {
   return;  
 }
 
+
+
+/*--------------------------------------------------------------------
+ * flite_filex : 
+ *--------------------------------------------------------------------*/
+static int flite_filex(t_flite *x, t_symbol *name, int gowhere) {
+    
+  char completefilename[MAXPDSTRING];
+
+  const char* filename = name->s_name;
+  char realdir[MAXPDSTRING], *realname = NULL;
+  int fd;
+  fd = canvas_open(x->x_canvas, filename, "", realdir, &realname, MAXPDSTRING, 0);
+      if(fd < 0){
+          pd_error(x, "[flite]: can't find file %s", filename);
+          x->x_inprogress = 0;
+          return 0;
+        }
+
+  strcpy(completefilename, realdir);
+  strcat(completefilename, "/");
+  strcat(completefilename, realname);
+  
+  if (gowhere == FILETEXT){
+    strcpy(x->textfile, completefilename); 
+  }else if (gowhere == FILEVOX) {
+    strcpy(x->voxfile, completefilename);
+  }
+  return 1;
+}
+
 /*--------------------------------------------------------------------
  * flite_voice_file : open a voice for the synthesizer
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *name) {
     
-  char completefilename[MAXPDSTRING];
-
-  const char* filename = name->s_name;
-  const char* ext = strrchr(filename, '.');
-  char realdir[MAXPDSTRING], *realname = NULL;
-  int fd;
-    if(ext && !strchr(ext, '/')){ // extension already supplied, no default extension
-      ext = "";
-      fd = canvas_open(x->x_canvas, filename, ext, realdir, &realname, MAXPDSTRING, 0);
-      if(fd < 0){
-          pd_error(x, "[flite]: can't find file %s", filename);
-          x->x_inprogress = 0;
-          return;
-        }
-    }
-  strcpy(completefilename, realdir);
-  strcat(completefilename, "/");
-  strcat(completefilename, realname);
+  if(!flite_filex(x, name, FILEVOX)) {
+    return;
+  }
+  
 #ifdef FLITE_DEBUG
-  debug("flite_voice: called with arg='%s'\n", completefilename);
+  debug("flite_voice: called with arg='%s'\n", x->voxfile);
 #endif
+
   flite_add_lang("eng",usenglish_init,cmulex_init);
   flite_add_lang("usenglish",usenglish_init,cmulex_init);
-  x->voice = flite_voice_load(completefilename);
+  x->voice = flite_voice_load(x->voxfile);
 }
 
 /*--------------------------------------------------------------------
@@ -436,6 +437,7 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
   return;  
 }
 
+
 /*--------------------------------------------------------------------
  * flite_textfile : read textfile
  *--------------------------------------------------------------------*/
@@ -445,7 +447,9 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
     pd_error(x,"%s", thread_waiting);
     return;
   }
-  flite_opentextfile(x, filename);
+  if(!flite_filex(x, filename, FILETEXT)) {
+    return;
+  }
   flite_do_textfile(x);
   return;
 }
@@ -461,7 +465,10 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
   }
 
   pthread_mutex_lock(&x->x_mutex);
-  flite_opentextfile(x, filename);
+  if(!flite_filex(x, filename, FILETEXT)) {
+    pthread_mutex_unlock(&x->x_mutex);
+	return;
+  }
   x->x_requestcode = TEXTFILE;
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);
