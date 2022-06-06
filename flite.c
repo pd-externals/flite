@@ -103,6 +103,7 @@ typedef struct _flite
   char     *textbuf;                 /* text buffer (hack) */
   int      bufsize;                  /* text buffer size */
   char completefilename[MAXPDSTRING];
+  char completevoxfilename[MAXPDSTRING];
   char x_inprogress;
   cst_voice *voice;
   t_thrd_request x_requestcode;
@@ -369,7 +370,7 @@ static void flite_do_textfile(t_flite *x) {
 }
 
 /*--------------------------------------------------------------------
- * flite_voice : set the voice for the synthesizer
+ * flite_voice_file : open a voice for the synthesizer
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *name) {
     
