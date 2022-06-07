@@ -479,16 +479,6 @@ static void flite_thread(t_flite *x) {
         x->x_requestcode = IDLE;
     pthread_mutex_unlock(&x->x_mutex);
     }
-    else if (x->x_requestcode == TEXT)
-    {
-    pthread_mutex_unlock(&x->x_mutex);
-    flite_do_textbuffer(x);
-    pthread_mutex_lock(&x->x_mutex);
-    if (x->x_requestcode == TEXT)
-        x->x_requestcode = IDLE;
-    pthread_mutex_unlock(&x->x_mutex);
-        
-    }
     else if (x->x_requestcode == TEXTFILE)
     {
     pthread_mutex_unlock(&x->x_mutex);
@@ -596,7 +586,6 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_voice_file,   gensym("voice_file"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
-  class_addmethod(flite_class, (t_method)flite_thrd_textbuffer,  gensym("thrd_text"),  A_GIMME, 0);
   class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
   class_addmethod(flite_class, (t_method)flite_thrd_textfile,   gensym("thrd_textfile"),   A_DEFSYM, 0);
   
