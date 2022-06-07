@@ -229,9 +229,6 @@ static void flite_do_textbuffer(t_flite *x) {
     return;
   }
   
-  free(x->textbuf);
-  x->textbuf = NULL;
-  
   x->x_inprogress = 1;
   
   
