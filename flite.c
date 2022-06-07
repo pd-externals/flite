@@ -234,7 +234,7 @@ static void flite_do_textbuffer(t_flite *x) {
   binbuf_free(bbuf);
   x->textbuf = (char *) calloc(length+1, sizeof(char)); 
   memcpy(x->textbuf, buf, length);  
-  free(buf);
+  freebytes(buf, length);
   x->x_inprogress = 0;
   
 #ifdef FLITE_DEBUG
