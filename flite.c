@@ -528,41 +528,38 @@ static void flite_thread(t_flite *x) {
     } 
     if (x->x_requestcode == SYNTH)
     {
-    pthread_mutex_unlock(&x->x_mutex);
-    //pthread_mutex_lock(&x->x_mutex);
-    
+    pthread_mutex_unlock(&x->x_mutex);    
 # ifdef FLITE_DEBUG
   debug("thread synth\n");
 # endif
     flite_synth(x);
-	x->x_requestcode = IDLE;
-    //pthread_mutex_unlock(&x->x_mutex);  
+    pthread_mutex_lock(&x->x_mutex);
+    if (x->x_requestcode == SYNTH)
+        x->x_requestcode = IDLE;
+    pthread_mutex_unlock(&x->x_mutex);
     }
     else if (x->x_requestcode == TEXT)
     {
     pthread_mutex_unlock(&x->x_mutex);
-    //pthread_mutex_lock(&x->x_mutex);
-    
-	//pthread_mutex_lock(&x->x_mutex);
-	
     flite_do_textbuffer(x);
-	x->x_requestcode = IDLE;
-    //pthread_mutex_lock(&x->x_mutex);
-	
-	//pthread_mutex_unlock(&x->x_mutex);
-	
-	
+    pthread_mutex_lock(&x->x_mutex);
+    if (x->x_requestcode == TEXT)
+        x->x_requestcode = IDLE;
+    pthread_mutex_unlock(&x->x_mutex);
+		
     }
     else if (x->x_requestcode == TEXTFILE)
     {
     pthread_mutex_unlock(&x->x_mutex);
-    pthread_mutex_lock(&x->x_mutex);
-    x->x_requestcode = IDLE;
     flite_do_textfile(x);
+    pthread_mutex_lock(&x->x_mutex);
+    if (x->x_requestcode == TEXTFILE)
+        x->x_requestcode = IDLE;
     pthread_mutex_unlock(&x->x_mutex);
     }
     else if (x->x_requestcode == QUIT)
     {
+    pthread_mutex_unlock(&x->x_mutex);
     break;
     }
   }
