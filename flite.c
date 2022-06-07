@@ -257,28 +257,6 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
 
 
 /*--------------------------------------------------------------------
- * flite_thrd_textbuffer : call threaded set text-buffer
- *--------------------------------------------------------------------*/
-static void flite_thrd_textbuffer(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
- 
- if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }
-  x->x_argc = argc;
-  x->x_argv = argv;
-  
-  
-  pthread_mutex_lock(&x->x_mutex);  
-  x->x_requestcode = TEXT;
-  pthread_mutex_unlock(&x->x_mutex);
-  pthread_cond_signal(&x->x_requestcondition);  
-  return;
-}
-
-
-
-/*--------------------------------------------------------------------
  * flite_list : parse & synthesize text in one swell foop
  *--------------------------------------------------------------------*/
 static void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
@@ -311,7 +289,8 @@ static void flite_set(t_flite *x, t_symbol *ary) {
 
 
 /*--------------------------------------------------------------------
- * flite_filex : get the full path of the file if it exist.
+ * flite_filex : get the full path of the file if it exist 
+ * and place it's full path on the struct.
  *--------------------------------------------------------------------*/
 static int flite_filex(t_flite *x, t_symbol *name, int gowhere) {
     
@@ -446,11 +425,12 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
     return;
   }
 
-  pthread_mutex_lock(&x->x_mutex);
   if(!flite_filex(x, filename, FILETEXT)) {
     pthread_mutex_unlock(&x->x_mutex);
     return;
   }
+  
+  pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = TEXTFILE;
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);
@@ -507,7 +487,7 @@ static void flite_thread(t_flite *x) {
     if (x->x_requestcode == TEXT)
         x->x_requestcode = IDLE;
     pthread_mutex_unlock(&x->x_mutex);
-		
+        
     }
     else if (x->x_requestcode == TEXTFILE)
     {
