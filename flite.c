@@ -220,23 +220,65 @@ static void flite_synth(t_flite *x) {
  * flite_do_textbuffer : threaded text-buffer
  *--------------------------------------------------------------------*/
 static void flite_do_textbuffer(t_flite *x) {
-    
-  char *buf;
-  int length;
+
+  int i, alen, buffered;
+  t_symbol *asym;
+
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
     return;
   }
-  x->x_inprogress = 1;  
-  t_binbuf*bbuf = binbuf_new();
-  binbuf_add(bbuf, x->x_argc, x->x_argv);
-  binbuf_gettext(bbuf, &buf, &length);
-  binbuf_free(bbuf);
-  x->textbuf = (char *) calloc(length+1, sizeof(char)); 
-  memcpy(x->textbuf, buf, length);  
-  free(buf);
-  x->x_inprogress = 0;
   
+  free(x->textbuf);
+  x->textbuf = NULL;
+  
+  x->x_inprogress = 1;
+  
+  
+  // -- allocate initial text-buffer if required
+  if (x->textbuf == NULL) {
+    x->bufsize = DEFAULT_BUFSIZE;
+    x->textbuf = (char *) calloc(x->bufsize, sizeof(char));
+  }
+  if (x->textbuf == NULL) {
+    pd_error(x,"flite: allocation failed for text buffer");
+    x->bufsize = 0;
+    return;
+  }
+
+  // -- convert args to strings
+  buffered = 0;
+  for (i = 0; i < x->x_argc; i++) {
+    asym = atom_gensym(x->x_argv);
+    alen = 1+strlen(asym->s_name);
+
+    // -- reallocate if necessary
+    while (buffered + alen > x->bufsize) {
+	  x->textbuf = (char *) realloc(x->textbuf, x->bufsize+DEFAULT_BUFSTEP);
+      x->bufsize = x->bufsize+DEFAULT_BUFSTEP;
+      if (x->textbuf == NULL) {
+	pd_error(x,"flite: allocation failed for text buffer");
+	x->bufsize = 0;
+	return;
+      }
+    }
+    
+    // -- append arg-string to text-buf
+    if (i == 0) {
+      strcpy(x->textbuf+buffered, asym->s_name);
+      buffered += alen-1;
+    } else {
+      *(x->textbuf+buffered) = ' ';
+      strcpy(x->textbuf+buffered+1, asym->s_name);
+      buffered += alen;
+    }
+    
+    // -- increment/decrement
+    x->x_argv++;
+  }
+  
+  x->x_inprogress = 0;
+
 #ifdef FLITE_DEBUG
   debug("flite_debug: got text='%s'\n", x->textbuf);
 #endif
@@ -255,6 +297,7 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
   return;
 }
 
+
 /*--------------------------------------------------------------------
  * flite_thrd_textbuffer : call threaded set text-buffer
  *--------------------------------------------------------------------*/
@@ -266,7 +309,9 @@ static void flite_thrd_textbuffer(t_flite *x, MOO_UNUSED t_symbol *s, int argc, 
   }
   x->x_argc = argc;
   x->x_argv = argv;
-  pthread_mutex_lock(&x->x_mutex);
+  
+  
+  pthread_mutex_lock(&x->x_mutex);  
   x->x_requestcode = TEXT;
   pthread_mutex_unlock(&x->x_mutex);
   pthread_cond_signal(&x->x_requestcondition);  
@@ -487,21 +532,29 @@ static void flite_thread(t_flite *x) {
     if (x->x_requestcode == SYNTH)
     {
     pthread_mutex_unlock(&x->x_mutex);
-    pthread_mutex_lock(&x->x_mutex);
-    x->x_requestcode = IDLE;
+    //pthread_mutex_lock(&x->x_mutex);
+    
 # ifdef FLITE_DEBUG
   debug("thread synth\n");
 # endif
     flite_synth(x);
-    pthread_mutex_unlock(&x->x_mutex);  
+	x->x_requestcode = IDLE;
+    //pthread_mutex_unlock(&x->x_mutex);  
     }
     else if (x->x_requestcode == TEXT)
     {
     pthread_mutex_unlock(&x->x_mutex);
-    pthread_mutex_lock(&x->x_mutex);
-    x->x_requestcode = IDLE;
+    //pthread_mutex_lock(&x->x_mutex);
+    
+	//pthread_mutex_lock(&x->x_mutex);
+	
     flite_do_textbuffer(x);
-    pthread_mutex_unlock(&x->x_mutex);
+	x->x_requestcode = IDLE;
+    //pthread_mutex_lock(&x->x_mutex);
+	
+	//pthread_mutex_unlock(&x->x_mutex);
+	
+	
     }
     else if (x->x_requestcode == TEXTFILE)
     {
