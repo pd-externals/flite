@@ -95,11 +95,6 @@ typedef enum _thrd_request
   QUIT = 5, 
 } t_thrd_request;
 
-typedef enum _filex
-{
-  FILETEXT = 0,
-  FILEVOX = 1, 
-} t_filex;
 
 typedef struct _flite
 {
@@ -108,12 +103,10 @@ typedef struct _flite
   t_symbol *x_arrayname;             /* arrayname (from '_tabwrite' code in $PD_SRC/d_array.c) */
   char     *textbuf;                 /* text buffer (hack) */
   int      bufsize;                  /* text buffer size */
-  char textfile[MAXPDSTRING];
-  char voxfile[MAXPDSTRING];
+  char reqfile[MAXPDSTRING];
   char x_inprogress;
   cst_voice *voice;
   t_thrd_request x_requestcode;
-  t_filex x_filex;
   pthread_mutex_t x_mutex;
   pthread_cond_t x_requestcondition;
   pthread_t x_tid;
@@ -292,7 +285,7 @@ static void flite_set(t_flite *x, t_symbol *ary) {
  * flite_filex : get the full path of the file if it exist 
  * and place it's full path on the struct.
  *--------------------------------------------------------------------*/
-static int flite_filex(t_flite *x, t_symbol *name, int gowhere) {
+static int flite_filex(t_flite *x, t_symbol *name) {
     
   char completefilename[MAXPDSTRING];
 
@@ -309,31 +302,26 @@ static int flite_filex(t_flite *x, t_symbol *name, int gowhere) {
   strcpy(completefilename, realdir);
   strcat(completefilename, "/");
   strcat(completefilename, realname);
-  
-  if (gowhere == FILETEXT){
-    strcpy(x->textfile, completefilename); 
-  }else if (gowhere == FILEVOX) {
-    strcpy(x->voxfile, completefilename);
-  }
+  strcpy(x->reqfile, completefilename);
   return 1;
 }
 
 /*--------------------------------------------------------------------
  * flite_voice_file : open a voice file for the synthesizer and use it.
  *--------------------------------------------------------------------*/
-static void flite_voice_file(t_flite *x, t_symbol *name) {
+static void flite_voice_file(t_flite *x, t_symbol *filename) {
     
-  if(!flite_filex(x, name, FILEVOX)) {
+  if(!flite_filex(x, filename)) {
     return;
   }
   
 #ifdef FLITE_DEBUG
-  debug("flite_voice: called with arg='%s'\n", x->voxfile);
+  debug("flite_voice: called with arg='%s'\n", x->reqfile);
 #endif
 
   flite_add_lang("eng",usenglish_init,cmulex_init);
   flite_add_lang("usenglish",usenglish_init,cmulex_init);
-  x->voice = flite_voice_load(x->voxfile);
+  x->voice = flite_voice_load(x->reqfile);
 }
 
 /*--------------------------------------------------------------------
@@ -385,7 +373,7 @@ static void flite_do_textfile(t_flite *x) {
   }
   x->x_inprogress = 1;
   FILE *fp;
-  fp = fopen(x->textfile, "r");
+  fp = fopen(x->reqfile, "r");
   fseek(fp, 0, SEEK_END);
   int len;
   len = ftell(fp);
@@ -407,7 +395,7 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
     pd_error(x,"%s", thread_waiting);
     return;
   }
-  if(!flite_filex(x, filename, FILETEXT)) {
+  if(!flite_filex(x, filename)) {
     return;
   }
   flite_do_textfile(x);
@@ -425,7 +413,7 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
     return;
   }
 
-  if(!flite_filex(x, filename, FILETEXT)) {
+  if(!flite_filex(x, filename)) {
     pthread_mutex_unlock(&x->x_mutex);
     return;
   }
@@ -536,7 +524,6 @@ static void flite_free(t_flite *x) {
     
   while(x->x_inprogress) {
   sleep(1);
-   // when we get to garray_resize() we crash if we close the patch on an ongoing "threaded synth"
   }
     
 # ifdef FLITE_DEBUG
