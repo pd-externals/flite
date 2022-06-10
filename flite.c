@@ -106,6 +106,8 @@ typedef struct _flite
   char reqfile[MAXPDSTRING];
   char x_inprogress;
   cst_voice *voice;
+  t_outlet *x_bangout;
+  t_clock *x_clock;
   t_thrd_request x_requestcode;
   pthread_mutex_t x_mutex;
   pthread_cond_t x_requestcondition;
@@ -114,6 +116,8 @@ typedef struct _flite
   t_atom *x_argv;
 } t_flite;
 
+
+static void flite_clock_tick(t_flite *x);
 
 /*--------------------------------------------------------------------
  * flite_synth : synthesize current text-buffer
@@ -195,8 +199,11 @@ static void flite_synth(t_flite *x) {
   }
 
   // -- outlet synth-done-bang
-  outlet_bang(x->x_obj.ob_outlet);
-
+  //outlet_bang(x->x_obj.ob_outlet);
+  //outlet_bang(x->x_bangout);
+  clock_delay(x->x_clock, 0);
+  
+  
   // -- cleanup
   delete_wave(wave);
 
@@ -236,6 +243,17 @@ static void flite_do_textbuffer(t_flite *x) {
   return;
     
 }
+
+/*--------------------------------------------------------------------
+ * flite_clock_tick : clock
+ *--------------------------------------------------------------------*/
+
+static void flite_clock_tick(t_flite *x)
+{
+    outlet_bang(x->x_bangout);
+}
+
+
 
 /*--------------------------------------------------------------------
  * flite_text : set text-buffer
@@ -496,7 +514,9 @@ static void *flite_new(t_symbol *ary)
   t_flite *x;
 
   x = (t_flite *)pd_new(flite_class);
-
+  
+  x->x_clock = clock_new(x, (t_method)flite_clock_tick);
+  
   // set initial arrayname
   x->x_arrayname = ary;
 
@@ -505,7 +525,7 @@ static void *flite_new(t_symbol *ary)
   x->bufsize = 0;
 
   // create bang-on-done outlet
-  outlet_new(&x->x_obj, &s_bang);
+  x->x_bangout = outlet_new(&x->x_obj, &s_bang);
   
   // default voice  
   x->voice = register_cmu_us_kal16();
