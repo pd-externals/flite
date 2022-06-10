@@ -105,7 +105,6 @@ typedef struct _flite
   int      bufsize;                  /* text buffer size */
   char reqfile[MAXPDSTRING];
   char x_inprogress;
-  cst_voice *voice;
   t_outlet *x_bangout;
   t_clock *x_clock;
   t_thrd_request x_requestcode;
@@ -114,6 +113,12 @@ typedef struct _flite
   pthread_t x_tid;
   int x_argc;
   t_atom *x_argv;
+  // flite
+  cst_voice *voice;
+  cst_wave *wave;
+  int i,vecsize;
+  t_garray *a;
+  t_word *vec;
 } t_flite;
 
 
@@ -123,10 +128,10 @@ static void flite_clock_tick(t_flite *x);
  * flite_synth : synthesize current text-buffer
  *--------------------------------------------------------------------*/
 static void flite_synth(t_flite *x) {
-  cst_wave *wave;
-  int i,vecsize;
-  t_garray *a;
-  t_word *vec;
+  //cst_wave *wave;
+  //int i,vecsize;
+  //t_garray *a;
+  //t_word *vec;
   
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
@@ -140,7 +145,7 @@ static void flite_synth(t_flite *x) {
   x->x_inprogress = 1;
 
   // -- sanity checks
-  if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+  if (!(x->a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
     pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
     x->x_inprogress = 0;
     return;
@@ -154,9 +159,9 @@ static void flite_synth(t_flite *x) {
 # ifdef FLITE_DEBUG
   debug("flite: flite_text_to_wave()\n");
 # endif
-  wave = flite_text_to_wave(x->textbuf,x->voice);
+  x->wave = flite_text_to_wave(x->textbuf,x->voice);
 
-  if (!wave) {
+  if (!x->wave) {
     pd_error(x,"flite: synthesis failed for text '%s'", x->textbuf);
     x->x_inprogress = 0;
     return;
@@ -166,52 +171,11 @@ static void flite_synth(t_flite *x) {
 # ifdef FLITE_DEBUG
   debug("flite: cst_wave_resample()\n");
 # endif
-  cst_wave_resample(wave,sys_getsr());
-
-  // -- resize & write to our array
-# ifdef FLITE_DEBUG
-  debug("flite: garray_resize(%d)\n", wave->num_samples);
-# endif
-
-  // -- sanity checks again for the thread if the patch has been closed
-  if (!(a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-    x->x_inprogress = 0;
-    return;
-  }
-
-  //garray_resize(a, wave->num_samples); // seems here is the problem when threaded and on graphical array
+  cst_wave_resample(x->wave,sys_getsr());
   
-  // this attempt didn't fix the above but is better to use garray_resize_long()
-  garray_resize_long(a, (long) wave->num_samples); 
-
- 
-  if (!garray_getfloatwords(a, &vecsize, &vec))
-    pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
-
-# ifdef FLITE_DEBUG
-  debug("flite: ->write to garray loop<-\n");
-# endif
-
-
-  for (i = 0; i < wave->num_samples; i++) {
-    vec->w_float = wave->samples[i]/32767.0;
-    vec++;
-  }
-
-  // -- outlet synth-done-bang
-  //outlet_bang(x->x_obj.ob_outlet);
-  //outlet_bang(x->x_bangout);
   clock_delay(x->x_clock, 0);
-  
-  
-  // -- cleanup
-  delete_wave(wave);
 
-  // -- redraw
-  garray_redraw(a);
-  
- 
-  x->x_inprogress = 0;
+
   
   return;
 }
@@ -250,6 +214,52 @@ static void flite_do_textbuffer(t_flite *x) {
 
 static void flite_clock_tick(t_flite *x)
 {
+	
+  // -- resize & write to our array
+# ifdef FLITE_DEBUG
+  debug("flite: garray_resize(%d)\n", x->wave->num_samples);
+# endif
+
+  // -- sanity checks again for the thread if the patch has been closed
+  if (!(x->a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+    x->x_inprogress = 0;
+    return;
+  }
+
+  //garray_resize(a, wave->num_samples); // seems here is the problem when threaded and on graphical array
+  
+  // this attempt didn't fix the above but is better to use garray_resize_long()
+  garray_resize_long(x->a, (long) x->wave->num_samples); 
+
+ 
+  if (!garray_getfloatwords(x->a, &x->vecsize, &x->vec))
+    pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
+
+# ifdef FLITE_DEBUG
+  debug("flite: ->write to garray loop<-\n");
+# endif
+
+
+  for (x->i = 0; x->i < x->wave->num_samples; x->i++) {
+    x->vec->w_float = x->wave->samples[x->i]/32767.0;
+    x->vec++;
+  }
+
+  // -- outlet synth-done-bang
+  //outlet_bang(x->x_obj.ob_outlet);
+  //outlet_bang(x->x_bangout);
+  
+  
+  
+  // -- cleanup
+  delete_wave(x->wave);
+
+  // -- redraw
+  garray_redraw(x->a);
+  
+ 
+  x->x_inprogress = 0;	
+
     outlet_bang(x->x_bangout);
 }
 
