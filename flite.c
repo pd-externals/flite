@@ -92,7 +92,8 @@ typedef enum _thrd_request
   TEXT = 2,
   TEXTFILE = 3,
   SYNTH = 4,
-  QUIT = 5, 
+  VOXFILE = 5,
+  QUIT = 6, 
 } t_thrd_request;
 
 
@@ -116,7 +117,7 @@ typedef struct _flite
   // flite
   cst_voice *voice;
   cst_wave *wave;
-  int i,vecsize;
+  long i,vecsize;
   t_garray *a;
   t_word *vec;
 } t_flite;
@@ -128,10 +129,6 @@ static void flite_clock_tick(t_flite *x);
  * flite_synth : synthesize current text-buffer
  *--------------------------------------------------------------------*/
 static void flite_synth(t_flite *x) {
-  //cst_wave *wave;
-  //int i,vecsize;
-  //t_garray *a;
-  //t_word *vec;
   
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
@@ -173,11 +170,66 @@ static void flite_synth(t_flite *x) {
 # endif
   cst_wave_resample(x->wave,sys_getsr());
   
-  clock_delay(x->x_clock, 0);
+  
+  /*----------- <fooblock> : if I place all this "fooblock" in the clock function 
+  *------------------------------I get audio pops even in not graphical arrays */
+  
+  // -- resize & write to our array
+# ifdef FLITE_DEBUG
+  debug("flite: garray_resize(%d)\n", x->wave->num_samples);
+# endif
 
+  // -- sanity checks again for the thread if the patch has been closed
+  if (!(x->a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+    x->x_inprogress = 0;
+    return;
+  }
 
   
+  garray_resize_long(x->a, (long) x->wave->num_samples); 
+
+ 
+  if (!garray_getfloatwords(x->a, &x->vecsize, &x->vec))
+    pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
+
+# ifdef FLITE_DEBUG
+  debug("flite: ->write to garray loop<-\n");
+# endif
+
+
+  for (x->i = 0; x->i < x->wave->num_samples; x->i++) {
+    x->vec->w_float = x->wave->samples[x->i]/32767.0;
+    x->vec++;
+  }  
+  
+    // -- cleanup
+  delete_wave(x->wave);
+
+  // -- redraw
+  garray_redraw(x->a);
+
+  x->x_inprogress = 0;  
+  
+  /*------------- </ fooblock> */
+  
+  
+  
+  
+  
+  clock_delay(x->x_clock, 0);
+ 
   return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_clock_tick : clock
+ *--------------------------------------------------------------------*/
+
+static void flite_clock_tick(t_flite *x)
+{
+
+  outlet_bang(x->x_bangout);
+  
 }
 
 /*--------------------------------------------------------------------
@@ -207,62 +259,6 @@ static void flite_do_textbuffer(t_flite *x) {
   return;
     
 }
-
-/*--------------------------------------------------------------------
- * flite_clock_tick : clock
- *--------------------------------------------------------------------*/
-
-static void flite_clock_tick(t_flite *x)
-{
-	
-  // -- resize & write to our array
-# ifdef FLITE_DEBUG
-  debug("flite: garray_resize(%d)\n", x->wave->num_samples);
-# endif
-
-  // -- sanity checks again for the thread if the patch has been closed
-  if (!(x->a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-    x->x_inprogress = 0;
-    return;
-  }
-
-  //garray_resize(a, wave->num_samples); // seems here is the problem when threaded and on graphical array
-  
-  // this attempt didn't fix the above but is better to use garray_resize_long()
-  garray_resize_long(x->a, (long) x->wave->num_samples); 
-
- 
-  if (!garray_getfloatwords(x->a, &x->vecsize, &x->vec))
-    pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
-
-# ifdef FLITE_DEBUG
-  debug("flite: ->write to garray loop<-\n");
-# endif
-
-
-  for (x->i = 0; x->i < x->wave->num_samples; x->i++) {
-    x->vec->w_float = x->wave->samples[x->i]/32767.0;
-    x->vec++;
-  }
-
-  // -- outlet synth-done-bang
-  //outlet_bang(x->x_obj.ob_outlet);
-  //outlet_bang(x->x_bangout);
-  
-  
-  
-  // -- cleanup
-  delete_wave(x->wave);
-
-  // -- redraw
-  garray_redraw(x->a);
-  
- 
-  x->x_inprogress = 0;	
-
-    outlet_bang(x->x_bangout);
-}
-
 
 
 /*--------------------------------------------------------------------
@@ -335,21 +331,40 @@ static int flite_filex(t_flite *x, t_symbol *name) {
 }
 
 /*--------------------------------------------------------------------
- * flite_voice_file : open a voice file for the synthesizer and use it.
+ * flite_voice_file : check for the voice file and signal the thread to open it
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *filename) {
+	
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  } 
     
   if(!flite_filex(x, filename)) {
     return;
   }
   
+  pthread_mutex_lock(&x->x_mutex);
+  x->x_requestcode = VOXFILE;
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_thrd_voice_file : open the voice file in the thread
+ *--------------------------------------------------------------------*/
+static void flite_thrd_voice_file(t_flite *x) {
+    
+  
 #ifdef FLITE_DEBUG
   debug("flite_voice: called with arg='%s'\n", x->reqfile);
 #endif
-
+  x->x_inprogress = 1;
   flite_add_lang("eng",usenglish_init,cmulex_init);
   flite_add_lang("usenglish",usenglish_init,cmulex_init);
   x->voice = flite_voice_load(x->reqfile);
+  x->x_inprogress = 0;
 }
 
 /*--------------------------------------------------------------------
@@ -442,7 +457,7 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
   }
 
   if(!flite_filex(x, filename)) {
-    pthread_mutex_unlock(&x->x_mutex);
+    //pthread_mutex_unlock(&x->x_mutex);
     return;
   }
   
@@ -501,6 +516,15 @@ static void flite_thread(t_flite *x) {
     flite_do_textfile(x);
     pthread_mutex_lock(&x->x_mutex);
     if (x->x_requestcode == TEXTFILE)
+        x->x_requestcode = IDLE;
+    pthread_mutex_unlock(&x->x_mutex);
+    }
+    else if (x->x_requestcode == VOXFILE)
+    {
+    pthread_mutex_unlock(&x->x_mutex);
+    flite_thrd_voice_file(x);
+    pthread_mutex_lock(&x->x_mutex);
+    if (x->x_requestcode == VOXFILE)
         x->x_requestcode = IDLE;
     pthread_mutex_unlock(&x->x_mutex);
     }

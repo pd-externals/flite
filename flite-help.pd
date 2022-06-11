@@ -31,8 +31,8 @@
 #X msg 631 167 bang;
 #X msg 682 168 stop;
 #X msg 631 145 start;
-#X text 396 566 ACKNOWLEDGEMENTS:;
-#X text 414 581 Flite runtime speech synthesis library by Alan W Black
+#X text 381 585 ACKNOWLEDGEMENTS:;
+#X text 399 600 Flite runtime speech synthesis library by Alan W Black
 and Kevin A. Lenzo.;
 #X msg 94 271 list bang bahda boobop;
 #N canvas 260 141 494 344 META 0;
@@ -44,9 +44,9 @@ Wilkes for Pd version 0.42.;
 #X text 12 65 INLET_0 set text synth list;
 #X text 12 85 OUTLET_0 bang;
 #X text 12 105 AUTHOR Bryan Jurish <moocow.bovine@gmail.com>;
-#X restore 681 619 pd META;
+#X restore 705 656 pd META;
 #X msg 60 122 text test 123;
-#X text 399 620 Bryan Jurish <moocow.bovine@gmail.com>;
+#X text 384 639 Bryan Jurish <moocow.bovine@gmail.com>;
 #X msg 110 296 awb;
 #X msg 143 296 kal;
 #X msg 178 295 kal16;
@@ -114,13 +114,13 @@ test 123 test 123 test 123 test 123 test 123 test 123 test 123;
 #X msg 13 58 set words;
 #X msg 515 143 set words;
 #X text 159 243 "threaded" synthesis of the current text buffer;
-#X text 362 530 threaded version, f 18;
-#X text 276 448 threaded, f 10;
+#X text 295 545 threaded version, f 18;
+#X text 273 443 threaded, f 10;
 #X obj 159 445 list prepend 0;
 #X text 498 392 Warnings: better not use graphical arrays for threaded
 synthesis. Also be careful to not synthesize to an array which is currently
 playing., f 46;
-#X text 401 638 v0.03 updated by Lucas Cordiviola;
+#X text 386 657 v0.03 updated by Lucas Cordiviola;
 #X obj 72 222 list trim;
 #X text 227 175 Threaded "text" message sets input text-buffer, f
 21;
