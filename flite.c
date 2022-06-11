@@ -218,7 +218,7 @@ static void flite_synth(t_flite *x) {
   
   clock_delay(x->x_clock, 0);
  
-  return;
+  //return;
 }
 
 /*--------------------------------------------------------------------
@@ -250,7 +250,7 @@ static void flite_do_textbuffer(t_flite *x) {
   binbuf_free(bbuf);
   x->textbuf = (char *) calloc(length+1, sizeof(char)); 
   memcpy(x->textbuf, buf, length);  
-  freebytes(buf, length);
+  freebytes(buf, length+1);
   x->x_inprogress = 0;
   
 #ifdef FLITE_DEBUG
@@ -596,6 +596,7 @@ static void flite_free(t_flite *x) {
     x->bufsize = 0;
   }*/
   free(x->textbuf);
+  clock_free(x->x_clock);
 }
 
 /*--------------------------------------------------------------------
