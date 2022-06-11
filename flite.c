@@ -171,6 +171,24 @@ static void flite_synth(t_flite *x) {
   cst_wave_resample(x->wave,sys_getsr());
   
   
+
+  
+  
+  
+  
+  
+  clock_delay(x->x_clock, 0);
+ 
+  //return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_clock_tick : clock
+ *--------------------------------------------------------------------*/
+
+static void flite_clock_tick(t_flite *x)
+{
+	
   /*----------- <fooblock> : if I place all this "fooblock" in the clock function 
   *------------------------------I get audio pops even in not graphical arrays */
   
@@ -211,22 +229,6 @@ static void flite_synth(t_flite *x) {
   x->x_inprogress = 0;  
   
   /*------------- </ fooblock> */
-  
-  
-  
-  
-  
-  clock_delay(x->x_clock, 0);
- 
-  //return;
-}
-
-/*--------------------------------------------------------------------
- * flite_clock_tick : clock
- *--------------------------------------------------------------------*/
-
-static void flite_clock_tick(t_flite *x)
-{
 
   outlet_bang(x->x_bangout);
   
