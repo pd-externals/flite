@@ -231,9 +231,6 @@ static void flite_synth(t_flite *x) {
   pthread_mutex_lock(&x->x_mutex);
   // do not lock Pd if flite_free() is currently trying to join the thread!
   if (x->x_requestcode != QUIT)
-# ifdef FLITE_DEBUG
-  debug("what\n");
-# endif
   {
     x->x_requestcode != IDLE ? sys_lock() : "";
     x->x_threaderrormsg = NONE;
