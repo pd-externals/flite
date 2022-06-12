@@ -144,8 +144,8 @@ static void flite_synth(t_flite *x) {
     if (x->x_requestcode != QUIT)
     {
       x->x_requestcode != IDLE && x->x_requestcode != SYNTH  ? sys_lock() : "";
-	  x->x_threaderrormsg = INPROGRESS;
-	  x->x_inprogress = 0;
+      x->x_threaderrormsg = INPROGRESS;
+      x->x_inprogress = 0;
       clock_delay(x->x_clock, 0);
       sys_unlock();
     }
@@ -161,14 +161,14 @@ static void flite_synth(t_flite *x) {
 
   // -- sanity checks
   if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-	  
+      
     pthread_mutex_lock(&x->x_mutex);
     // do not lock Pd if flite_free() is currently trying to join the thread!
     if (x->x_requestcode != QUIT)
     {
       x->x_requestcode != IDLE ? sys_lock() : "";
-	  x->x_threaderrormsg = ARRAY;
-	  x->x_inprogress = 0;
+      x->x_threaderrormsg = ARRAY;
+      x->x_inprogress = 0;
       clock_delay(x->x_clock, 0);
       sys_unlock();
     }
@@ -182,8 +182,8 @@ static void flite_synth(t_flite *x) {
     if (x->x_requestcode != QUIT)
     {
       x->x_requestcode != IDLE ? sys_lock() : "";
-	  x->x_threaderrormsg = BUFFER;
-	  x->x_inprogress = 0;
+      x->x_threaderrormsg = BUFFER;
+      x->x_inprogress = 0;
       clock_delay(x->x_clock, 0);
       sys_unlock();
     }
@@ -203,8 +203,8 @@ static void flite_synth(t_flite *x) {
     if (x->x_requestcode != QUIT)
     {
       x->x_requestcode != IDLE ? sys_lock() : "";
-	  x->x_threaderrormsg = FAIL;
-	  x->x_inprogress = 0;
+      x->x_threaderrormsg = FAIL;
+      x->x_inprogress = 0;
       clock_delay(x->x_clock, 0);
       sys_unlock();
     }
@@ -223,7 +223,7 @@ static void flite_synth(t_flite *x) {
   // -- sanity checks again for the thread if the patch has been closed
   if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
     x->x_inprogress = 0;
-	x->x_threaderrormsg = FAIL; // this is need but why?
+    x->x_threaderrormsg = FAIL; // this is need but why?
     return;
   }
   
@@ -236,7 +236,7 @@ static void flite_synth(t_flite *x) {
 # endif
   {
     x->x_requestcode != IDLE ? sys_lock() : "";
-	x->x_threaderrormsg = NONE;
+    x->x_threaderrormsg = NONE;
     clock_delay(x->x_clock, 0);
     sys_unlock();
   }
@@ -277,25 +277,25 @@ static void flite_clock_tick(t_flite *x)
     // -- redraw
     garray_redraw(x->x_a);
     x->x_inprogress = 0;  
-	
+    
     /*------------- </ fooblock> */
-	
+    
     outlet_bang(x->x_bangout);
-	
+    
   } else if (x->x_threaderrormsg == ARRAY) { 
   
     pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);  
-	
+    
   } else if (x->x_threaderrormsg == BUFFER) {
-	  
+      
     pd_error(x,"flite: attempt to synthesize empty text-buffer!");
-	
+    
   } else if (x->x_threaderrormsg == FAIL) {
-	  
+      
     pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
 
   } else if (x->x_threaderrormsg == INPROGRESS) {
-	  
+      
     pd_error(x,"%s", thread_waiting);
   }
   return;
@@ -407,7 +407,7 @@ static int flite_filex(t_flite *x, t_symbol *name) {
  * flite_voice_file : check for the voice file and signal the thread to open it
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *filename) {
-	
+    
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
     return;
