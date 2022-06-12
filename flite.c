@@ -62,9 +62,6 @@ cst_lexicon *cmulex_init(void);
 
 
 
-#define DEFAULT_BUFSIZE 256
-#define DEFAULT_BUFSTEP 256
-
 /*=====================================================================
  * Structures and Types
  *=====================================================================*/
@@ -223,7 +220,7 @@ static void flite_synth(t_flite *x) {
   // -- sanity checks again for the thread if the patch has been closed
   if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
     x->x_inprogress = 0;
-    x->x_threaderrormsg = FAIL; // this is need but why?
+    x->x_threaderrormsg = FAIL; // this is needed but why?
     return;
   }
   
