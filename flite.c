@@ -161,10 +161,7 @@ static void flite_synth(t_flite *x) {
 
   // -- sanity checks
   if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-    //pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
-	//x->x_threaderrormsg = ARRAY;
-    //x->x_inprogress = 0;
-	//clock_delay(x->x_clock, 0);
+	  
     pthread_mutex_lock(&x->x_mutex);
     // do not lock Pd if flite_free() is currently trying to join the thread!
     if (x->x_requestcode != QUIT)
@@ -179,10 +176,7 @@ static void flite_synth(t_flite *x) {
     return;
   }
   if (!x->x_textbuf) {
-    //pd_error(x,"flite: attempt to synthesize empty text-buffer!");
-    //x->x_threaderrormsg = BUFFER;
-	//x->x_inprogress = 0;
-	//clock_delay(x->x_clock, 0);
+
     pthread_mutex_lock(&x->x_mutex);
     // do not lock Pd if flite_free() is currently trying to join the thread!
     if (x->x_requestcode != QUIT)
@@ -203,10 +197,7 @@ static void flite_synth(t_flite *x) {
   x->x_wave = flite_text_to_wave(x->x_textbuf, x->x_voice);
 
   if (!x->x_wave) {
-    //pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
-	//x->x_threaderrormsg = FAIL;
-    //x->x_inprogress = 0;
-	//clock_delay(x->x_clock, 0);
+
     pthread_mutex_lock(&x->x_mutex);
     // do not lock Pd if flite_free() is currently trying to join the thread!
     if (x->x_requestcode != QUIT)
@@ -236,10 +227,6 @@ static void flite_synth(t_flite *x) {
     return;
   }
   
-
-  
-  //x->x_threaderrormsg = NONE;
-  //clock_delay(x->x_clock, 0);
   
   pthread_mutex_lock(&x->x_mutex);
   // do not lock Pd if flite_free() is currently trying to join the thread!
