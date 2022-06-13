@@ -264,20 +264,13 @@ static void flite_clock_tick(t_flite *x)
     
     outlet_bang(x->x_bangout);
     
-  } else if (x->x_threaderrormsg == ARRAY) { 
-  
-      pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);  
-    
-  } else if (x->x_threaderrormsg == BUFFER) {
-      
-      pd_error(x,"flite: attempt to synthesize empty text-buffer!");
-    
-  } else if (x->x_threaderrormsg == FAIL) {
-      
+  } else if (x->x_threaderrormsg == ARRAY) {   
+      pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);      
+  } else if (x->x_threaderrormsg == BUFFER) {      
+      pd_error(x,"flite: attempt to synthesize empty text-buffer!");    
+  } else if (x->x_threaderrormsg == FAIL) {      
       pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
-
-  } else if (x->x_threaderrormsg == INPROGRESS) {
-      
+  } else if (x->x_threaderrormsg == INPROGRESS) {      
       pd_error(x,"%s", thread_waiting);
   }
   return;
