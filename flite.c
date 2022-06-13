@@ -135,24 +135,17 @@ static void flite_clock_tick(t_flite *x);
  *--------------------------------------------------------------------*/
 static void flite_synth(t_flite *x) {
   
+  // we only get here if the user called the non threaded "synth"
+  // so nothing needs to be protected
   if (x->x_inprogress) {
-    pthread_mutex_lock(&x->x_mutex);
-    // do not lock Pd if flite_free() is currently trying to join the thread!
-    if (x->x_requestcode != QUIT)
-    {
-      x->x_requestcode != IDLE && x->x_requestcode != SYNTH  ? sys_lock() : "";
-      x->x_threaderrormsg = INPROGRESS;
-      x->x_inprogress = 0;
-      clock_delay(x->x_clock, 0);
-      sys_unlock();
-    }
-    pthread_mutex_unlock(&x->x_mutex);
+    pd_error(x,"%s", thread_waiting);
     return;
   }
 
-# ifdef FLITE_DEBUG
+
+#ifdef FLITE_DEBUG
   debug("flite: got message 'synth'\n");
-# endif
+#endif
 
   x->x_inprogress = 1;
 
@@ -175,7 +168,6 @@ static void flite_synth(t_flite *x) {
   if (!x->x_textbuf) {
 
     pthread_mutex_lock(&x->x_mutex);
-    // do not lock Pd if flite_free() is currently trying to join the thread!
     if (x->x_requestcode != QUIT)
     {
       x->x_requestcode != IDLE ? sys_lock() : "";
@@ -188,15 +180,14 @@ static void flite_synth(t_flite *x) {
     return;
   }
 
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("flite: flite_text_to_wave()\n");
-# endif
+#endif
   x->x_wave = flite_text_to_wave(x->x_textbuf, x->x_voice);
 
   if (!x->x_wave) {
 
     pthread_mutex_lock(&x->x_mutex);
-    // do not lock Pd if flite_free() is currently trying to join the thread!
     if (x->x_requestcode != QUIT)
     {
       x->x_requestcode != IDLE ? sys_lock() : "";
@@ -210,9 +201,9 @@ static void flite_synth(t_flite *x) {
   }
 
   // -- resample
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("flite: cst_wave_resample()\n");
-# endif
+#endif
   cst_wave_resample(x->x_wave, sys_getsr());
   
 
@@ -226,7 +217,6 @@ static void flite_synth(t_flite *x) {
   
   
   pthread_mutex_lock(&x->x_mutex);
-  // do not lock Pd if flite_free() is currently trying to join the thread!
   if (x->x_requestcode != QUIT)
   {
     x->x_requestcode != IDLE ? sys_lock() : "";
@@ -253,15 +243,15 @@ static void flite_clock_tick(t_flite *x)
     int i;
  
     // -- resize & write to our array
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("flite: garray_resize(%d)\n", x->x_wave->num_samples);
-# endif 
+#endif 
     garray_resize_long(x->x_a, (long) x->x_wave->num_samples);  
     if (!garray_getfloatwords(x->x_a, &x->x_vecsize, &x->x_vec))
       pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("flite: ->write to garray loop<-\n");
-# endif
+#endif
     for (i = 0; i < x->x_wave->num_samples; i++) {
       x->x_vec->w_float = x->x_wave->samples[i]/32767.0;
       x->x_vec++;
@@ -564,17 +554,17 @@ static void flite_thread(t_flite *x) {
   while (1) {
     pthread_mutex_lock(&x->x_mutex);
     while (x->x_requestcode == IDLE) {
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("pthread_cond_wait(\n");
-# endif 
+#endif 
       pthread_cond_wait(&x->x_requestcondition, &x->x_mutex);  
     } 
     if (x->x_requestcode == SYNTH)
     {
       pthread_mutex_unlock(&x->x_mutex);    
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("thread synth\n");
-# endif
+#endif
       flite_synth(x);
       pthread_mutex_lock(&x->x_mutex);
       if (x->x_requestcode == SYNTH)
@@ -605,9 +595,9 @@ static void flite_thread(t_flite *x) {
       break;
     }
   }
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("thread quit\n");
-# endif
+#endif
   return;
 }
 
@@ -650,9 +640,9 @@ static void flite_free(t_flite *x) {
   sleep(1);
   }
     
-# ifdef FLITE_DEBUG
+#ifdef FLITE_DEBUG
   debug("free\n");
-# endif
+#endif
     
   pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = QUIT;
