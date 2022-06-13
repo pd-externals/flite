@@ -38,7 +38,7 @@ XINCLUDE = -I ${SOURCE_DIR}/include \
 	 ${empty}
 	 
 
-cflags = ${XINCLUDE} -I . -DVERSION='"0.3.0"'
+cflags = ${XINCLUDE} -I . -DVERSION='"0.4.0"'
 ldlibs += -lm -lpthread
 
 
