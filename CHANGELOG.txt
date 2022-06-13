@@ -1,0 +1,8 @@
+Changelog for pd-flite
+
+v0.3.0, dated 12-06-2022
+
+- Add Flite sources and include them in the build.
+- The build includes the 5 built-in "voices" that can be used in the synthesis.
+- Update pd-lib-builder to 0.6.0
+- New method to read from files.

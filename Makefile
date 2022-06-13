@@ -38,7 +38,7 @@ XINCLUDE = -I ${SOURCE_DIR}/include \
 	 ${empty}
 	 
 
-cflags = ${XINCLUDE} -I . -DVERSION='"0.03"'
+cflags = ${XINCLUDE} -I . -DVERSION='"0.3.0"'
 ldlibs += -lm -lpthread
 
 
@@ -278,7 +278,7 @@ endef
 datafiles = \
 	flite-help.pd \
 	flite-numbers.pd flite-test2.pd flite-test.pd \
-	README.md flite-meta.pd \
+	README.md flite-meta.pd CHANGELOG.txt \
 	
 
 #alldebug: CPPFLAGS+=-DFLITE_DEBUG=1
