@@ -85,7 +85,6 @@ typedef struct _flite
   int      bufsize;                  /* text buffer size */
   char completefilename[MAXPDSTRING];
   cst_voice *voice;
-  pthread_t tid;
 } t_flite;
 
 
@@ -323,26 +322,6 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
   flite_do_textfile(x);
 }
 
-/*--------------------------------------------------------------------
- * flite_thrd_textfile : threaded read textfile
- *--------------------------------------------------------------------*/
-static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
-
-  flite_opentextfile(x, filename);
-  pthread_create(&x->tid, NULL, flite_do_textfile, x);
-  	
-}
-
-/*--------------------------------------------------------------------
- * flite_thrd_synth : threaded flite_synth
- *--------------------------------------------------------------------*/
-static void flite_thrd_synth(t_flite *x) {
-	
-  pthread_create(&x->tid, NULL, flite_synth, x);
-    
-}
-
-
 
 /*--------------------------------------------------------------------
  * constructor / destructor
@@ -406,8 +385,7 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_synth, gensym("synth"), 0);
   class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
-  class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
-  class_addmethod(flite_class, (t_method)flite_thrd_textfile,   gensym("thrd_textfile"),   A_DEFSYM, 0);
+
   
   
   // --- help patch
