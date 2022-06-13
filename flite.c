@@ -67,9 +67,9 @@ cst_lexicon *cmulex_init(void);
  *=====================================================================*/
 
 static const char *flite_description =
-  "flite: Text-to-Speech external v" VERSION " \n";
+  "[flite]: Text-to-Speech external v" VERSION " \n";
   
-static const char *thread_waiting = "flite: Wait for the running thread to finish";
+static const char *thread_waiting = "[flite]: Wait for the running thread to finish";
   
 
 //static char *flite_acknowledge = "flite: based on code by ";
@@ -265,11 +265,11 @@ static void flite_clock_tick(t_flite *x)
     outlet_bang(x->x_bangout);
     
   } else if (x->x_threaderrormsg == ARRAY) {   
-      pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);      
+      pd_error(x,"[flite]: no such array '%s'", x->x_arrayname->s_name);      
   } else if (x->x_threaderrormsg == BUFFER) {      
-      pd_error(x,"flite: attempt to synthesize empty text-buffer!");    
+      pd_error(x,"[flite]: attempt to synthesize empty text-buffer!");    
   } else if (x->x_threaderrormsg == FAIL) {      
-      pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
+      pd_error(x,"[flite]: synthesis failed for text '%s'", x->x_textbuf);
   } else if (x->x_threaderrormsg == INPROGRESS) {      
       pd_error(x,"%s", thread_waiting);
   }
@@ -366,7 +366,7 @@ static int flite_filex(t_flite *x, t_symbol *name) {
   int fd;
   fd = canvas_open(x->x_canvas, filename, "", realdir, &realname, MAXPDSTRING, 0);
       if(fd < 0){
-          pd_error(x, "flite: can't find file: %s", filename);
+          pd_error(x, "[flite]: can't find file: %s", filename);
           x->x_inprogress = 0;
           return 0;
         }
@@ -451,7 +451,7 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
   else if (!strcmp(voxstring, "slt")) {
     x->x_voice = register_cmu_us_slt();     
   } else {
-    pd_error(x,"flite: unknown voice '%s'. Possible voices are: 'awb', 'kal', 'kal16', 'rms' or 'slt'.", voxstring );
+    pd_error(x,"[flite]: unknown voice '%s'. Possible voices are: 'awb', 'kal', 'kal16', 'rms' or 'slt'.", voxstring );
     return; 
   }
   return;  
