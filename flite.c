@@ -85,12 +85,10 @@ static t_class *flite_class;
 typedef enum _thrd_request
 {
   IDLE = 0,
-  LIST = 1,
-  TEXT = 2,
-  TEXTFILE = 3,
-  SYNTH = 4,
-  VOXFILE = 5,
-  QUIT = 6, 
+  TEXTFILE = 1,
+  SYNTH = 2,
+  VOXFILE = 3,
+  QUIT = 4, 
 } t_thrd_request;
 
 typedef enum _thrd_error
@@ -268,19 +266,19 @@ static void flite_clock_tick(t_flite *x)
     
   } else if (x->x_threaderrormsg == ARRAY) { 
   
-    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);  
+      pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);  
     
   } else if (x->x_threaderrormsg == BUFFER) {
       
-    pd_error(x,"flite: attempt to synthesize empty text-buffer!");
+      pd_error(x,"flite: attempt to synthesize empty text-buffer!");
     
   } else if (x->x_threaderrormsg == FAIL) {
       
-    pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
+      pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
 
   } else if (x->x_threaderrormsg == INPROGRESS) {
       
-    pd_error(x,"%s", thread_waiting);
+      pd_error(x,"%s", thread_waiting);
   }
   return;
 }
@@ -375,7 +373,7 @@ static int flite_filex(t_flite *x, t_symbol *name) {
   int fd;
   fd = canvas_open(x->x_canvas, filename, "", realdir, &realname, MAXPDSTRING, 0);
       if(fd < 0){
-          pd_error(x, "[flite]: can't find file: %s", filename);
+          pd_error(x, "flite: can't find file: %s", filename);
           x->x_inprogress = 0;
           return 0;
         }
