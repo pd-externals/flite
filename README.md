@@ -1,6 +1,6 @@
 README for Pd external distribution 'pd-flite'
 
-Last updated for version 0.03
+Last updated for version 0.3.1
 
 # DESCRIPTION
 
