@@ -131,7 +131,7 @@ playing., f 46;
 #X connect 2 0 1 0;
 #X coords 0 -1 1 1 90 25 2 100 100;
 #X restore 369 408 pd get-voices;
-#X text 411 642 v0.4.0 updated by Lucas Cordiviola;
+#X text 411 642 v0.3.1 updated by Lucas Cordiviola;
 #X connect 9 0 61 0;
 #X connect 10 0 61 0;
 #X connect 11 0 61 0;
