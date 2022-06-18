@@ -140,7 +140,6 @@ static void flite_synth(t_flite *x) {
     return;
   }
 
-
 #ifdef FLITE_DEBUG
   debug("flite: got message 'synth'\n");
 #endif
@@ -236,17 +235,19 @@ static void flite_clock_tick(t_flite *x)
    
   if (x->x_threaderrormsg == NONE) {
   
-   /*----------- <fooblock> : if I place all this "fooblock" in the clock function 
-    *------------------------------I get audio pops even in not graphical arrays */
+   // <fooblock> : if I place all this "fooblock" in the clock function 
+   // I get audio pops even in not graphical arrays 
     int i;
  
     // -- resize & write to our array
 #ifdef FLITE_DEBUG
   debug("flite: garray_resize(%d)\n", x->x_wave->num_samples);
 #endif 
+
     garray_resize_long(x->x_a, (long) x->x_wave->num_samples);  
     if (!garray_getfloatwords(x->x_a, &x->x_vecsize, &x->x_vec))
       pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
+  
 #ifdef FLITE_DEBUG
   debug("flite: ->write to garray loop<-\n");
 #endif
@@ -260,7 +261,7 @@ static void flite_clock_tick(t_flite *x)
     garray_redraw(x->x_a);
     x->x_inprogress = 0;  
     
-    /*------------- </ fooblock> */
+    // --- </ fooblock> 
     
     outlet_bang(x->x_bangout);
     
@@ -400,17 +401,12 @@ static void flite_voice_file(t_flite *x, t_symbol *filename) {
 }
 
 /*--------------------------------------------------------------------
- * flite_thrd_voice_file : open the voice file in the thread
+ * flite_thrd_voice_file : open the voice file.
  *--------------------------------------------------------------------*/
-static void flite_thrd_voice_file(t_flite *x) {
-
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }    
+static void flite_thrd_voice_file(t_flite *x) {  
   
 #ifdef FLITE_DEBUG
-  debug("flite_voice: called with arg='%s'\n", x->x_reqfile);
+  debug("flite_thrd_voice_file: called with arg='%s'\n", x->x_reqfile);
 #endif
   x->x_inprogress = 1;
   flite_add_lang("eng",usenglish_init,cmulex_init);
@@ -420,7 +416,7 @@ static void flite_thrd_voice_file(t_flite *x) {
 }
 
 /*--------------------------------------------------------------------
- * flite_voice : set the voice for the synthesizer
+ * flite_voice : set one of the built-in voices for the synthesizer.
  *--------------------------------------------------------------------*/
 static void flite_voice(t_flite *x, t_symbol *vox) {
 
@@ -461,11 +457,7 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
  * flite_do_textfile : read the textfile and synthesize it.
  *--------------------------------------------------------------------*/
 static void flite_do_textfile(t_flite *x) {
-    
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }
+
   x->x_inprogress = 1;
   FILE *fp;
   fp = fopen(x->x_reqfile, "r");
@@ -499,7 +491,7 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
 
 
 /*--------------------------------------------------------------------
- * flite_thrd_textfile : threaded read textfile
+ * flite_thrd_textfile : call the thread to read the textfile
  *--------------------------------------------------------------------*/
 static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
  
@@ -521,7 +513,7 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
 }
 
 /*--------------------------------------------------------------------
- * flite_thrd_synth : threaded flite_synth
+ * flite_thrd_synth : call the thread to do flite_synth
  *--------------------------------------------------------------------*/
 static void flite_thrd_synth(t_flite *x) {
   
