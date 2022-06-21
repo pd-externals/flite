@@ -148,12 +148,12 @@ static void flite_synth(t_flite *x) {
   // -- sanity checks
   if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
     x->x_syntherrormsg = ARRAY;
-	flite_clock_tick(x);
+    flite_clock_tick(x);
     return;
   }
   if (!x->x_textbuf) {
     x->x_syntherrormsg = BUFFER;
-	flite_clock_tick(x);
+    flite_clock_tick(x);
     return;
   }
 
@@ -164,7 +164,7 @@ static void flite_synth(t_flite *x) {
 
   if (!x->x_wave) {
     x->x_syntherrormsg = FAIL;
-	flite_clock_tick(x);
+    flite_clock_tick(x);
     return;
   }
 
@@ -195,8 +195,8 @@ static void flite_thread_synth(t_flite *x) {
     if (!x->x_shutdown)
     {
       if (x->x_requestcode != IDLE) 
-	  {
-		sys_lock();
+      {
+        sys_lock();
         x->x_syntherrormsg = BUFFER;
         clock_delay(x->x_clock, 0);
         sys_unlock();
@@ -217,13 +217,13 @@ static void flite_thread_synth(t_flite *x) {
     if (!x->x_shutdown)
     {
       if (x->x_requestcode != IDLE) 
-	  {
-		sys_lock();
+      {
+        sys_lock();
         x->x_syntherrormsg = FAIL;
         clock_delay(x->x_clock, 0);
         sys_unlock();
       }
-	}
+    }
     pthread_mutex_unlock(&x->x_mutex);
     return;
   }
@@ -239,8 +239,8 @@ static void flite_thread_synth(t_flite *x) {
   if (x->x_shutdown)
   {
       x->x_inprogress = 0;
-	  pthread_mutex_unlock(&x->x_mutex);
-	  return;	  
+      pthread_mutex_unlock(&x->x_mutex);
+      return;     
   }
   pthread_mutex_unlock(&x->x_mutex);
   
@@ -250,7 +250,7 @@ static void flite_thread_synth(t_flite *x) {
   if (!x->x_shutdown)
   {
     if (x->x_requestcode != IDLE) 
-	{
+    {
       sys_lock();
       x->x_syntherrormsg = NONE;
       clock_delay(x->x_clock, 0);
@@ -307,10 +307,10 @@ static void flite_clock_tick(t_flite *x)
       x->x_inprogress = 0;      
   } else if (x->x_syntherrormsg == BUFFER) {      
       pd_error(x,"flite: attempt to synthesize empty text-buffer!");
-      x->x_inprogress = 0;	  
+      x->x_inprogress = 0;    
   } else if (x->x_syntherrormsg == FAIL) {      
       pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
-	  x->x_inprogress = 0;
+      x->x_inprogress = 0;
   } else if (x->x_syntherrormsg == INPROGRESS) {      
       pd_error(x,"%s", thread_waiting);
   }
