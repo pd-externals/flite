@@ -113,7 +113,6 @@ typedef struct _flite
   t_clock *x_clock;
   t_thrd_request x_requestcode;
   t_thrd_error x_syntherrormsg;
-  //int x_shutdown;
   pthread_mutex_t x_mutex;
   pthread_cond_t x_requestcondition;
   pthread_t x_tid;
