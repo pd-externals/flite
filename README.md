@@ -52,3 +52,8 @@ It gobbles memory, and also processor time on synthesis operations.
 # AUTHOR
 
 Bryan Jurish <moocow@ling.uni-potsdam.de>
+
+# MAINTENANCE 
+
+Since v0.3.0 Lucas Cordiviola https://github.com/Lucarda/pd-flite
+

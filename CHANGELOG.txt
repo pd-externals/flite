@@ -1,6 +1,6 @@
 Changelog for pd-flite
 
-v0.3.1, dated 14-06-2022
+v0.3.1, dated 21-06-2022
 
 - Add threaded functions for "synth" and "textfile"
 - Add function to open and use voice files

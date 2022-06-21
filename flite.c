@@ -6,7 +6,7 @@
  *
  *  PD interface to 'flite' C libraries.
  *
- * v0.03 updated by Lucas Cordiviola <lucarda27@hotmail.com>
+ * v0.3.1 updated by Lucas Cordiviola <lucarda27@hotmail.com>
  *
  *=============================================================================*/
 
