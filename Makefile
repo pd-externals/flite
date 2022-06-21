@@ -38,7 +38,7 @@ XINCLUDE = -I ${SOURCE_DIR}/include \
 	 ${empty}
 	 
 
-cflags = ${XINCLUDE} -I . -DVERSION='"0.3.0"'
+cflags = ${XINCLUDE} -I . -DVERSION='"0.3.1"'
 ldlibs += -lm -lpthread
 
 
@@ -281,7 +281,7 @@ datafiles = \
 	README.md flite-meta.pd CHANGELOG.txt \
 	
 
-#alldebug: CPPFLAGS += -DFLITE_DEBUG=1
+#alldebug: CPPFLAGS+=-DFLITE_DEBUG=1
 
 
 # include Makefile.pdlibbuilder from submodule directory 'pd-lib-builder'
