@@ -113,7 +113,7 @@ typedef struct _flite
   t_clock *x_clock;
   t_thrd_request x_requestcode;
   t_thrd_error x_syntherrormsg;
-  int x_shutdown;
+  //int x_shutdown;
   pthread_mutex_t x_mutex;
   pthread_cond_t x_requestcondition;
   pthread_t x_tid;
@@ -192,7 +192,7 @@ static void flite_thread_synth(t_flite *x) {
   if (!x->x_textbuf) 
   {
     pthread_mutex_lock(&x->x_mutex);
-    if (!x->x_shutdown)
+    if (x->x_requestcode != QUIT)
     {
       if (x->x_requestcode != IDLE) 
       {
@@ -214,7 +214,7 @@ static void flite_thread_synth(t_flite *x) {
   if (!x->x_wave) 
   {
     pthread_mutex_lock(&x->x_mutex);
-    if (!x->x_shutdown)
+    if (x->x_requestcode != QUIT)
     {
       if (x->x_requestcode != IDLE) 
       {
@@ -234,20 +234,8 @@ static void flite_thread_synth(t_flite *x) {
 #endif
   cst_wave_resample(x->x_wave, sys_getsr());
   
-  // -- emergency exit (not thread safe) if the patch is being closed.
-  pthread_mutex_lock(&x->x_mutex);  
-  if (x->x_shutdown)
-  {
-      x->x_inprogress = 0;
-      pthread_mutex_unlock(&x->x_mutex);
-      return;     
-  }
-  pthread_mutex_unlock(&x->x_mutex);
-  
-
-  
   pthread_mutex_lock(&x->x_mutex);
-  if (!x->x_shutdown)
+  if (x->x_requestcode != QUIT)
   {
     if (x->x_requestcode != IDLE) 
     {
@@ -653,8 +641,7 @@ static void *flite_new(t_symbol *ary)
   x->x_voice = register_cmu_us_kal16();
   
   x->x_canvas = canvas_getcurrent();  
-  x->x_inprogress = 0;
-  x->x_shutdown = 0; 
+  x->x_inprogress = 0; 
   x->x_requestcode = IDLE;
   pthread_mutex_init(&x->x_mutex, 0);
   pthread_cond_init(&x->x_requestcondition, 0);
@@ -664,15 +651,7 @@ static void *flite_new(t_symbol *ary)
 }
 
 static void flite_free(t_flite *x) {
-
-  x->x_shutdown = 1;
-  while(x->x_inprogress) {
-    sleep(1);
-#ifdef FLITE_DEBUG
-  debug("sleep\n");
-#endif
-  }
-    
+  
 #ifdef FLITE_DEBUG
   debug("free\n");
 #endif
