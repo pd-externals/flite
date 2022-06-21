@@ -112,7 +112,7 @@ typedef struct _flite
   t_outlet *x_bangout;
   t_clock *x_clock;
   t_thrd_request x_requestcode;
-  t_thrd_error x_threaderrormsg;
+  t_thrd_error x_syntherrormsg;
   int x_shutdown;
   pthread_mutex_t x_mutex;
   pthread_cond_t x_requestcondition;
@@ -147,12 +147,14 @@ static void flite_synth(t_flite *x) {
 
   // -- sanity checks
   if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
+    x->x_syntherrormsg = ARRAY;
+	flite_clock_tick(x);
     return;
   }
   if (!x->x_textbuf) {
-      pd_error(x,"flite: attempt to synthesize empty text-buffer!");
-      return;
+    x->x_syntherrormsg = BUFFER;
+	flite_clock_tick(x);
+    return;
   }
 
 #ifdef FLITE_DEBUG
@@ -161,7 +163,8 @@ static void flite_synth(t_flite *x) {
   x->x_wave = flite_text_to_wave(x->x_textbuf, x->x_voice);
 
   if (!x->x_wave) {
-    pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
+    x->x_syntherrormsg = FAIL;
+	flite_clock_tick(x);
     return;
   }
 
@@ -171,6 +174,7 @@ static void flite_synth(t_flite *x) {
 #endif
 
   cst_wave_resample(x->x_wave, sys_getsr());
+  x->x_syntherrormsg = NONE; 
   flite_clock_tick(x);
   return;
 }
@@ -188,13 +192,12 @@ static void flite_thread_synth(t_flite *x) {
   if (!x->x_textbuf) 
   {
     pthread_mutex_lock(&x->x_mutex);
-    if (x->x_requestcode != QUIT)
+    if (!x->x_shutdown)
     {
       if (x->x_requestcode != IDLE) 
 	  {
 		sys_lock();
-        x->x_threaderrormsg = BUFFER;
-        //x->x_inprogress = 0;
+        x->x_syntherrormsg = BUFFER;
         clock_delay(x->x_clock, 0);
         sys_unlock();
       }
@@ -211,13 +214,12 @@ static void flite_thread_synth(t_flite *x) {
   if (!x->x_wave) 
   {
     pthread_mutex_lock(&x->x_mutex);
-    if (x->x_requestcode != QUIT)
+    if (!x->x_shutdown)
     {
       if (x->x_requestcode != IDLE) 
 	  {
 		sys_lock();
-        x->x_threaderrormsg = FAIL;
-        //x->x_inprogress = 0;
+        x->x_syntherrormsg = FAIL;
         clock_delay(x->x_clock, 0);
         sys_unlock();
       }
@@ -232,16 +234,7 @@ static void flite_thread_synth(t_flite *x) {
 #endif
   cst_wave_resample(x->x_wave, sys_getsr());
   
-
-/*  
-  // -- sanity checks again for the thread if the patch has been closed
-  if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-    x->x_inprogress = 0;
-    x->x_threaderrormsg = FAIL; // this is needed but why?
-    return;
-  }
-*/
-  // -- emergency exit (not thread safe) if the patch has been closed.
+  // -- emergency exit (not thread safe) if the patch is being closed.
   pthread_mutex_lock(&x->x_mutex);  
   if (x->x_shutdown)
   {
@@ -254,12 +247,12 @@ static void flite_thread_synth(t_flite *x) {
 
   
   pthread_mutex_lock(&x->x_mutex);
-  if (x->x_requestcode != QUIT)
+  if (!x->x_shutdown)
   {
     if (x->x_requestcode != IDLE) 
 	{
       sys_lock();
-      x->x_threaderrormsg = NONE;
+      x->x_syntherrormsg = NONE;
       clock_delay(x->x_clock, 0);
       sys_unlock();
     }
@@ -277,7 +270,7 @@ static void flite_thread_synth(t_flite *x) {
 static void flite_clock_tick(t_flite *x)
 {
    
-  if (x->x_threaderrormsg == NONE) {
+  if (x->x_syntherrormsg == NONE) {
   
    // <fooblock> : if I place all this "fooblock" in the clock function 
    // I get audio pops even in not graphical arrays 
@@ -309,16 +302,16 @@ static void flite_clock_tick(t_flite *x)
     
     outlet_bang(x->x_bangout);
     
-  } else if (x->x_threaderrormsg == ARRAY) {   
+  } else if (x->x_syntherrormsg == ARRAY) {   
       pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
       x->x_inprogress = 0;      
-  } else if (x->x_threaderrormsg == BUFFER) {      
+  } else if (x->x_syntherrormsg == BUFFER) {      
       pd_error(x,"flite: attempt to synthesize empty text-buffer!");
       x->x_inprogress = 0;	  
-  } else if (x->x_threaderrormsg == FAIL) {      
+  } else if (x->x_syntherrormsg == FAIL) {      
       pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
 	  x->x_inprogress = 0;
-  } else if (x->x_threaderrormsg == INPROGRESS) {      
+  } else if (x->x_syntherrormsg == INPROGRESS) {      
       pd_error(x,"%s", thread_waiting);
   }
   return;
