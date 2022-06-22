@@ -160,23 +160,9 @@ playing., f 46;
 #X text 541 436 open this sub patch;
 #X text 412 630 v0.3.1 updated by Lucas Cordiviola https://github.com/Lucarda/pd-flite
 ;
-#N canvas 130 130 450 300 outlet2 0;
-#X obj 142 181 print;
-#X obj 143 33 inlet;
-#X obj 143 75 route 1 2;
-#X msg 143 122 flite: finished reading textfile;
-#X msg 158 153 flite: finished loading voicefile;
-#X connect 1 0 2 0;
-#X connect 2 0 3 0;
-#X connect 2 1 4 0;
-#X connect 3 0 0 0;
-#X connect 4 0 0 0;
-#X restore 190 639 pd outlet2;
-#X text 235 528 "textfile" message reads a text file into the text-buffer
-;
-#X text 345 43 1 - (bang) on completed synthesis;
-#X text 345 59 2 - (float) on finish reading file: (1) textfile \,
-(2) voicefile., f 66;
+#X text 345 43 1 - bang on completed synthesis;
+#X text 235 528 "textfile" message reads a text file and synthesize
+it;
 #X connect 8 0 59 0;
 #X connect 9 0 59 0;
 #X connect 10 0 59 0;
@@ -213,6 +199,5 @@ playing., f 46;
 #X connect 56 0 51 0;
 #X connect 57 0 53 0;
 #X connect 59 0 2 0;
-#X connect 59 1 67 0;
 #X connect 60 0 15 0;
 #X connect 60 0 15 1;

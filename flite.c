@@ -97,9 +97,8 @@ typedef enum _thrd_tick
   ARRAYERR = 1,
   BUFFERERR = 2,
   FAIL = 3,
-  TEXTFILEDONE = 4,
-  VOXFILEDONE = 5,  
-  INPROGRESS = 6,
+  VOXFILEDONE = 4,  
+  INPROGRESS = 5,
 } t_thrd_tick;
 
 
@@ -112,7 +111,6 @@ typedef struct _flite
   char x_reqfile[MAXPDSTRING];
   char x_inprogress;
   t_outlet *x_bangout;
-  t_outlet *x_floatout;
   t_clock *x_clock;
   t_thrd_request x_requestcode;
   t_thrd_tick x_tick_ctl;
@@ -292,11 +290,9 @@ static void flite_clock_tick(t_flite *x)
   } else if (x->x_tick_ctl == FAIL) {      
       pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
   } else if (x->x_tick_ctl == INPROGRESS) {      
-      pd_error(x,"%s", thread_waiting);
-  } else if (x->x_tick_ctl == TEXTFILEDONE) {
-      outlet_float(x->x_floatout, 1);      
+      pd_error(x,"%s", thread_waiting);      
   } else if (x->x_tick_ctl == VOXFILEDONE) {      
-      outlet_float(x->x_floatout, 2);
+      logpost(x,2,"Flite: successfully loaded '%s'", x->x_reqfile);
   }
   x->x_inprogress = 0;
   return;
@@ -501,20 +497,6 @@ static void flite_read_textfile(t_flite *x) {
   x->x_textbuf = (char *) calloc(len+1, sizeof(char));
   fread(x->x_textbuf, 1, len, fp);
   fclose(fp);
-  pthread_mutex_lock(&x->x_mutex);
-  if (x->x_requestcode != QUIT)
-  {
-	x->x_tick_ctl = TEXTFILEDONE;
-    if (x->x_requestcode != IDLE) 
-    {
-      sys_lock();
-      clock_delay(x->x_clock, 0);
-      sys_unlock();
-    } else { 
-	  flite_clock_tick(x);
-	}
-  }
-  pthread_mutex_unlock(&x->x_mutex);  
   return;  
 }
 
@@ -531,6 +513,7 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
     return;
   }
   flite_read_textfile(x);
+  flite_synth(x);
   return;
 }
 
@@ -547,7 +530,6 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
   }
 
   if(!flite_filex(x, filename)) {
-    //pthread_mutex_unlock(&x->x_mutex);
     return;
   }
   x->x_inprogress = 1;
@@ -609,6 +591,7 @@ static void flite_thread(t_flite *x) {
     {
       pthread_mutex_unlock(&x->x_mutex);
       flite_read_textfile(x);
+	  flite_thread_synth(x);
       pthread_mutex_lock(&x->x_mutex);
       if (x->x_requestcode == TEXTFILE)
           x->x_requestcode = IDLE;
@@ -654,7 +637,6 @@ static void *flite_new(t_symbol *ary)
 
   // create bang-on-done outlet
   x->x_bangout = outlet_new(&x->x_obj, &s_bang);
-  x->x_floatout = outlet_new(&x->x_obj, &s_float);
   
   // default voice  
   x->x_voice = register_cmu_us_kal16();
