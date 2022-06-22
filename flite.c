@@ -281,30 +281,24 @@ static void flite_clock_tick(t_flite *x)
     // -- cleanup
     delete_wave(x->x_wave);
     // -- redraw
-    garray_redraw(x->x_a);
-    x->x_inprogress = 0;  
+    garray_redraw(x->x_a);  
     
     outlet_bang(x->x_bangout);
     
   } else if (x->x_tick_ctl == ARRAYERR) {   
-      pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
-      x->x_inprogress = 0;      
+      pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);    
   } else if (x->x_tick_ctl == BUFFERERR) {      
-      pd_error(x,"flite: attempt to synthesize empty text-buffer!");
-      x->x_inprogress = 0;    
+      pd_error(x,"flite: attempt to synthesize empty text-buffer!");    
   } else if (x->x_tick_ctl == FAIL) {      
       pd_error(x,"flite: synthesis failed for text '%s'", x->x_textbuf);
-      x->x_inprogress = 0;
   } else if (x->x_tick_ctl == INPROGRESS) {      
       pd_error(x,"%s", thread_waiting);
-	  x->x_inprogress = 0;
   } else if (x->x_tick_ctl == TEXTFILEDONE) {
       outlet_float(x->x_floatout, 1);      
-      x->x_inprogress = 0;
   } else if (x->x_tick_ctl == VOXFILEDONE) {      
       outlet_float(x->x_floatout, 2);
-      x->x_inprogress = 0;
   }
+  x->x_inprogress = 0;
   return;
 }
 
