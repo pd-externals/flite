@@ -266,8 +266,11 @@ static void flite_clock_tick(t_flite *x)
 #endif 
 
     garray_resize_long(x->x_a, (long) x->x_wave->num_samples);  
-    if (!garray_getfloatwords(x->x_a, &x->x_vecsize, &x->x_vec))
+    if (!garray_getfloatwords(x->x_a, &x->x_vecsize, &x->x_vec)) {
       pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
+	  x->x_inprogress = 0;
+	  return;
+	}
   
 #ifdef FLITE_DEBUG
   debug("flite: ->write to garray loop<-\n");
@@ -532,6 +535,13 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
   if(!flite_filex(x, filename)) {
     return;
   }
+  
+  // -- sanity checks
+  if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
+    return;
+  }
+  
   x->x_inprogress = 1;
   pthread_mutex_lock(&x->x_mutex);
   x->x_requestcode = TEXTFILE;
@@ -628,10 +638,10 @@ static void *flite_new(t_symbol *ary)
   x = (t_flite *)pd_new(flite_class);
   
   x->x_clock = clock_new(x, (t_method)flite_clock_tick);
-  
+
   // set initial arrayname
   x->x_arrayname = ary;
-
+  
   // init x_textbuf
   x->x_textbuf = NULL;
 
