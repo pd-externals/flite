@@ -287,7 +287,7 @@ static void flite_threaded_voice_file(t_flite *x) {
 }
 
 /*--------------------------------------------------------------------
- * flite_do_voice_file : open the voice file .
+ * flite_do_voice_file : open the voice file for the synthesizer.
  *--------------------------------------------------------------------*/
 static void flite_do_voice_file(t_flite *x) {
 
@@ -342,7 +342,8 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
 }
 
 /*--------------------------------------------------------------------
- * flite_textfile : if the file exist call flite_read_textfile() and flite_synth()
+ * flite_textfile : if the file exist read it into the text-buffer and
+ * synthesize it.
  *--------------------------------------------------------------------*/
 static void flite_textfile(t_flite *x, t_symbol *filename) {
 
@@ -360,7 +361,7 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
 
 /*--------------------------------------------------------------------
  * flite_thrd_textfile : if the file exist call the thread to read it 
- * into the text buffer
+ * into the text-buffer and synthesize it.
  *--------------------------------------------------------------------*/
 static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
  
@@ -388,7 +389,7 @@ static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
 }
 
 /*--------------------------------------------------------------------
- * flite_read_textfile : read the text file 
+ * flite_read_textfile : read the text file into the text-buffer
  *--------------------------------------------------------------------*/
 static void flite_read_textfile(t_flite *x) {
 
@@ -469,7 +470,7 @@ static void flite_synth(t_flite *x) {
 }
 
 /*--------------------------------------------------------------------
- * flite_thread_synth : synthesize current text-buffer (threaded)
+ * flite_thread_synth : thread synthesizes the current text-buffer.
  *--------------------------------------------------------------------*/
 static void flite_thread_synth(t_flite *x) {
   
@@ -530,7 +531,7 @@ static void flite_thread_synth(t_flite *x) {
 }
 
 /*--------------------------------------------------------------------
- * flite_thrd_synth : call the thread to do flite_thread_synth
+ * flite_thrd_synth : call the thread to synthesize the text-buffer.
  *--------------------------------------------------------------------*/
 static void flite_thrd_synth(t_flite *x) {
   
