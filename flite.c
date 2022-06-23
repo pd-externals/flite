@@ -740,7 +740,7 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_synth, gensym("synth"), 0);
   class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_voice_file,   gensym("voice_file"),   A_DEFSYM, 0);
-  class_addmethod(flite_class, (t_method)flite_voice_file,   gensym("thrd_voice_file"),   A_DEFSYM, 0);
+  class_addmethod(flite_class, (t_method)flite_thrd_voice_file,   gensym("thrd_voice_file"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
   class_addmethod(flite_class, (t_method)flite_thrd_textfile,   gensym("thrd_textfile"),   A_DEFSYM, 0);
