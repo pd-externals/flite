@@ -261,13 +261,10 @@ static void flite_thrd_voice_file(t_flite *x) {
   pthread_mutex_lock(&x->x_mutex);
   if (x->x_requestcode != QUIT)
   {
-    if (x->x_requestcode != IDLE) 
-    {
-      sys_lock();
-      x->x_tick_ctl = VOXFILEDONE;
-      clock_delay(x->x_clock, 0);
-      sys_unlock();
-    }
+    sys_lock();
+    x->x_tick_ctl = VOXFILEDONE;
+    clock_delay(x->x_clock, 0);
+    sys_unlock();
   }
   pthread_mutex_unlock(&x->x_mutex);
   return;
@@ -456,15 +453,12 @@ static void flite_thread_synth(t_flite *x) {
     pthread_mutex_lock(&x->x_mutex);
     if (x->x_requestcode != QUIT)
     {
-      if (x->x_requestcode != IDLE) 
-      {
-        sys_lock();
-        x->x_tick_ctl = BUFFERERR;
-        clock_delay(x->x_clock, 0);
-        sys_unlock();
-      }
-    pthread_mutex_unlock(&x->x_mutex);
-    return;
+      sys_lock();
+      x->x_tick_ctl = BUFFERERR;
+      clock_delay(x->x_clock, 0);
+      sys_unlock();
+      pthread_mutex_unlock(&x->x_mutex);
+      return;
     }
   }
 
@@ -478,16 +472,13 @@ static void flite_thread_synth(t_flite *x) {
     pthread_mutex_lock(&x->x_mutex);
     if (x->x_requestcode != QUIT)
     {
-      if (x->x_requestcode != IDLE) 
-      {
-        sys_lock();
-        x->x_tick_ctl = FAIL;
-        clock_delay(x->x_clock, 0);
-        sys_unlock();
-      }
-    }
-    pthread_mutex_unlock(&x->x_mutex);
-    return;
+      sys_lock();
+      x->x_tick_ctl = FAIL;
+      clock_delay(x->x_clock, 0);
+      sys_unlock();
+      pthread_mutex_unlock(&x->x_mutex);
+      return;
+    }   
   }
 
   // -- resample
@@ -499,18 +490,13 @@ static void flite_thread_synth(t_flite *x) {
   pthread_mutex_lock(&x->x_mutex);
   if (x->x_requestcode != QUIT)
   {
-    if (x->x_requestcode != IDLE) 
-    {
-      sys_lock();
-      x->x_tick_ctl = FINISHSYNTH;
-      clock_delay(x->x_clock, 0);
-      sys_unlock();
-    }
+    sys_lock();
+    x->x_tick_ctl = FINISHSYNTH;
+    clock_delay(x->x_clock, 0);
+    sys_unlock();
   }
   pthread_mutex_unlock(&x->x_mutex);
- 
   return;
- 
 }
 
 /*--------------------------------------------------------------------
