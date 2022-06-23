@@ -133,7 +133,9 @@ static void flite_set(t_flite *x, t_symbol *ary);
 static int flite_filer(t_flite *x, t_symbol *name);
 static void flite_voice(t_flite *x, t_symbol *vox);
 static void flite_voice_file(t_flite *x, t_symbol *filename);
-static void flite_thrd_voice_file(t_flite *x);
+static void flite_thrd_voice_file(t_flite *x, t_symbol *filename);
+static void flite_threaded_voice_file(t_flite *x);
+static void flite_do_voice_file(t_flite *x);
 static void flite_do_textbuffer(t_flite *x);
 static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv);
 static void flite_textfile(t_flite *x, t_symbol *filename);
@@ -227,9 +229,28 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
 }
 
 /*--------------------------------------------------------------------
- * flite_voice_file : check for the voice file and signal the thread to open it
+ * flite_voice_file : check for the voice file and open it
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *filename) {
+    
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  } 
+    
+  if(!flite_filer(x, filename)) {
+    return;
+  }
+  flite_do_voice_file(x);
+  x->x_tick_ctl = VOXFILEDONE;
+  flite_clock_tick(x);
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_voice_file : check for the voice file and signal the thread to open it
+ *--------------------------------------------------------------------*/
+static void flite_thrd_voice_file(t_flite *x, t_symbol *filename) {
     
   if (x->x_inprogress) {
     pd_error(x,"%s", thread_waiting);
@@ -248,16 +269,11 @@ static void flite_voice_file(t_flite *x, t_symbol *filename) {
 }
 
 /*--------------------------------------------------------------------
- * flite_thrd_voice_file : open the voice file .
+ * flite_threaded_voice_file : thread opens the voice file.
  *--------------------------------------------------------------------*/
-static void flite_thrd_voice_file(t_flite *x) {  
+static void flite_threaded_voice_file(t_flite *x) {  
   
-#ifdef FLITE_DEBUG
-  debug("flite_thrd_voice_file: called with arg='%s'\n", x->x_reqfile);
-#endif
-  flite_add_lang("eng",usenglish_init,cmulex_init);
-  flite_add_lang("usenglish",usenglish_init,cmulex_init);
-  x->x_voice = flite_voice_load(x->x_reqfile);
+  flite_do_voice_file(x);
   pthread_mutex_lock(&x->x_mutex);
   if (x->x_requestcode != QUIT)
   {
@@ -268,6 +284,20 @@ static void flite_thrd_voice_file(t_flite *x) {
   }
   pthread_mutex_unlock(&x->x_mutex);
   return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_do_voice_file : open the voice file .
+ *--------------------------------------------------------------------*/
+static void flite_do_voice_file(t_flite *x) {
+
+#ifdef FLITE_DEBUG
+  debug("flite_thrd_voice_file: called with arg='%s'\n", x->x_reqfile);
+#endif
+  flite_add_lang("eng",usenglish_init,cmulex_init);
+  flite_add_lang("usenglish",usenglish_init,cmulex_init);
+  x->x_voice = flite_voice_load(x->x_reqfile);
+  
 }
 
 /*--------------------------------------------------------------------
@@ -612,7 +642,7 @@ static void flite_thread(t_flite *x) {
     else if (x->x_requestcode == VOXFILE)
     {
       pthread_mutex_unlock(&x->x_mutex);
-      flite_thrd_voice_file(x);
+      flite_threaded_voice_file(x);
       pthread_mutex_lock(&x->x_mutex);
       if (x->x_requestcode == VOXFILE)
           x->x_requestcode = IDLE;
@@ -710,6 +740,7 @@ void flite_setup(void) {
   class_addmethod(flite_class, (t_method)flite_synth, gensym("synth"), 0);
   class_addmethod(flite_class, (t_method)flite_voice,   gensym("voice"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_voice_file,   gensym("voice_file"),   A_DEFSYM, 0);
+  class_addmethod(flite_class, (t_method)flite_voice_file,   gensym("thrd_voice_file"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_textfile,   gensym("textfile"),   A_DEFSYM, 0);
   class_addmethod(flite_class, (t_method)flite_thrd_synth,   gensym("thrd_synth"), 0);
   class_addmethod(flite_class, (t_method)flite_thrd_textfile,   gensym("thrd_textfile"),   A_DEFSYM, 0);
