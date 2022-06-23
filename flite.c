@@ -77,6 +77,8 @@ static const char *thread_waiting = "flite: Wait for the running thread to finis
 // "flite: Text-to-Speech external v" VERSION " by Bryan Jurish\n"
 
 
+
+
 /*---------------------------------------------------------------------
  * flite
  *---------------------------------------------------------------------*/
@@ -127,7 +129,269 @@ typedef struct _flite
 } t_flite;
 
 
+static void flite_set(t_flite *x, t_symbol *ary);
+static int flite_filer(t_flite *x, t_symbol *name);
+static void flite_voice(t_flite *x, t_symbol *vox);
+static void flite_voice_file(t_flite *x, t_symbol *filename);
+static void flite_thrd_voice_file(t_flite *x);
+static void flite_do_textbuffer(t_flite *x);
+static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv);
+static void flite_textfile(t_flite *x, t_symbol *filename);
+static void flite_thrd_textfile(t_flite *x, t_symbol *filename);
+static void flite_read_textfile(t_flite *x);
+static void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv);
+static void flite_synth(t_flite *x);
+static void flite_thread_synth(t_flite *x);
+static void flite_thrd_synth(t_flite *x);
 static void flite_clock_tick(t_flite *x);
+static void flite_thread(t_flite *x);
+
+
+/*--------------------------------------------------------------------
+ * flite_set : set arrayname
+ *--------------------------------------------------------------------*/
+static void flite_set(t_flite *x, t_symbol *ary) {
+
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  } 
+#ifdef FLITE_DEBUG
+  debug("flite_set: called with arg='%s'\n", ary->s_name);
+#endif
+  x->x_arrayname = ary;
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_filer : get the full path of the file if it exist 
+ * and place it's full path on the struct.
+ *--------------------------------------------------------------------*/
+static int flite_filer(t_flite *x, t_symbol *name) {
+    
+  char completefilename[MAXPDSTRING];
+
+  const char* filename = name->s_name;
+  char realdir[MAXPDSTRING], *realname = NULL;
+  int fd;
+  fd = canvas_open(x->x_canvas, filename, "", realdir, &realname, MAXPDSTRING, 0);
+      if(fd < 0){
+          pd_error(x, "flite: can't find file: %s", filename);
+          x->x_inprogress = 0;
+          return 0;
+        }
+
+  strcpy(completefilename, realdir);
+  strcat(completefilename, "/");
+  strcat(completefilename, realname);
+  strcpy(x->x_reqfile, completefilename);
+  return 1;
+}
+
+/*--------------------------------------------------------------------
+ * flite_voice : set one of the built-in voices for the synthesizer.
+ *--------------------------------------------------------------------*/
+static void flite_voice(t_flite *x, t_symbol *vox) {
+
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }
+
+#ifdef FLITE_DEBUG
+  debug("flite_voice: called with arg='%s'\n", vox->s_name);
+#endif
+
+  const char *voxstring;
+  voxstring = vox->s_name;
+  
+  if (!strcmp(voxstring, "awb")) {
+    x->x_voice = register_cmu_us_awb();  
+  } 
+  else if (!strcmp(voxstring, "kal")) {
+    x->x_voice = register_cmu_us_kal();     
+  }
+  else if (!strcmp(voxstring, "kal16")) {
+    x->x_voice = register_cmu_us_kal16();   
+  }
+  else if (!strcmp(voxstring, "rms")) {
+    x->x_voice = register_cmu_us_rms();     
+  }
+  else if (!strcmp(voxstring, "slt")) {
+    x->x_voice = register_cmu_us_slt();     
+  } else {
+    pd_error(x,"flite: unknown voice '%s'. Possible voices are: 'awb', 'kal', 'kal16', 'rms' or 'slt'.", voxstring );
+    return; 
+  }
+  return;  
+}
+
+/*--------------------------------------------------------------------
+ * flite_voice_file : check for the voice file and signal the thread to open it
+ *--------------------------------------------------------------------*/
+static void flite_voice_file(t_flite *x, t_symbol *filename) {
+    
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  } 
+    
+  if(!flite_filer(x, filename)) {
+    return;
+  }
+  x->x_inprogress = 1;
+  pthread_mutex_lock(&x->x_mutex);
+  x->x_requestcode = VOXFILE;
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_thrd_voice_file : open the voice file .
+ *--------------------------------------------------------------------*/
+static void flite_thrd_voice_file(t_flite *x) {  
+  
+#ifdef FLITE_DEBUG
+  debug("flite_thrd_voice_file: called with arg='%s'\n", x->x_reqfile);
+#endif
+  flite_add_lang("eng",usenglish_init,cmulex_init);
+  flite_add_lang("usenglish",usenglish_init,cmulex_init);
+  x->x_voice = flite_voice_load(x->x_reqfile);
+  pthread_mutex_lock(&x->x_mutex);
+  if (x->x_requestcode != QUIT)
+  {
+    if (x->x_requestcode != IDLE) 
+    {
+      sys_lock();
+      x->x_tick_ctl = VOXFILEDONE;
+      clock_delay(x->x_clock, 0);
+      sys_unlock();
+    }
+  }
+  pthread_mutex_unlock(&x->x_mutex);
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_do_textbuffer : text-buffer
+ *--------------------------------------------------------------------*/
+static void flite_do_textbuffer(t_flite *x) {
+    
+  char *buf;
+  int length;
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }  
+  t_binbuf*bbuf = binbuf_new();
+  binbuf_add(bbuf, x->x_argc, x->x_argv);
+  binbuf_gettext(bbuf, &buf, &length);
+  binbuf_free(bbuf);
+  x->x_textbuf = (char *) calloc(length+1, sizeof(char)); 
+  memcpy(x->x_textbuf, buf, length);  
+  freebytes(buf, length+1);
+  
+#ifdef FLITE_DEBUG
+  debug("flite_debug: got text='%s'\n", x->x_textbuf);
+#endif
+  return;
+    
+}
+
+/*--------------------------------------------------------------------
+ * flite_text : set the text-buffer
+ *--------------------------------------------------------------------*/
+static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
+
+ if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }   
+  x->x_argc = argc;
+  x->x_argv = argv;
+  flite_do_textbuffer(x);
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_textfile : if the file exist call flite_read_textfile() and flite_synth()
+ *--------------------------------------------------------------------*/
+static void flite_textfile(t_flite *x, t_symbol *filename) {
+
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }
+  if(!flite_filer(x, filename)) {
+    return;
+  }
+  flite_read_textfile(x);
+  flite_synth(x);
+  return;
+}
+
+/*--------------------------------------------------------------------
+ * flite_thrd_textfile : if the file exist call the thread to read it 
+ * into the text buffer
+ *--------------------------------------------------------------------*/
+static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
+ 
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }
+
+  if(!flite_filer(x, filename)) {
+    return;
+  }
+  
+  // -- sanity checks
+  if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
+    return;
+  }
+  
+  x->x_inprogress = 1;
+  pthread_mutex_lock(&x->x_mutex);
+  x->x_requestcode = TEXTFILE;
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);
+  return;  
+}
+
+/*--------------------------------------------------------------------
+ * flite_read_textfile : read the text file 
+ *--------------------------------------------------------------------*/
+static void flite_read_textfile(t_flite *x) {
+
+  FILE *fp;
+  fp = fopen(x->x_reqfile, "r");
+  fseek(fp, 0, SEEK_END);
+  int len;
+  len = ftell(fp);
+  fseek(fp, 0, SEEK_SET);  
+  x->x_textbuf = (char *) calloc(len+1, sizeof(char));
+  fread(x->x_textbuf, 1, len, fp);
+  fclose(fp);
+  return;  
+}
+
+/*--------------------------------------------------------------------
+ * flite_list : parse & synthesize text in one swell foop
+ *--------------------------------------------------------------------*/
+static void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
+ 
+ if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  } 
+  flite_text(x,s,argc,argv);
+  flite_synth(x);
+  return;
+}
+
+
 
 /*--------------------------------------------------------------------
  * flite_synth : synthesize current text-buffer
@@ -250,6 +514,28 @@ static void flite_thread_synth(t_flite *x) {
 }
 
 /*--------------------------------------------------------------------
+ * flite_thrd_synth : call the thread to do flite_thread_synth
+ *--------------------------------------------------------------------*/
+static void flite_thrd_synth(t_flite *x) {
+  
+  if (x->x_inprogress) {
+    pd_error(x,"%s", thread_waiting);
+    return;
+  }
+    // -- sanity checks
+  if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
+    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
+    return;
+  }
+  x->x_inprogress = 1;
+  pthread_mutex_lock(&x->x_mutex);
+  x->x_requestcode = SYNTH;
+  pthread_mutex_unlock(&x->x_mutex);
+  pthread_cond_signal(&x->x_requestcondition);
+  return;  
+}
+
+/*--------------------------------------------------------------------
  * flite_clock_tick : clock
  *--------------------------------------------------------------------*/
 
@@ -268,9 +554,9 @@ static void flite_clock_tick(t_flite *x)
     garray_resize_long(x->x_a, (long) x->x_wave->num_samples);  
     if (!garray_getfloatwords(x->x_a, &x->x_vecsize, &x->x_vec)) {
       pd_error(x,"flite: bad template for write to array '%s'", x->x_arrayname->s_name);
-	  x->x_inprogress = 0;
-	  return;
-	}
+      x->x_inprogress = 0;
+      return;
+    }
   
 #ifdef FLITE_DEBUG
   debug("flite: ->write to garray loop<-\n");
@@ -301,276 +587,6 @@ static void flite_clock_tick(t_flite *x)
   return;
 }
 
-/*--------------------------------------------------------------------
- * flite_do_textbuffer : text-buffer
- *--------------------------------------------------------------------*/
-static void flite_do_textbuffer(t_flite *x) {
-    
-  char *buf;
-  int length;
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }  
-  t_binbuf*bbuf = binbuf_new();
-  binbuf_add(bbuf, x->x_argc, x->x_argv);
-  binbuf_gettext(bbuf, &buf, &length);
-  binbuf_free(bbuf);
-  x->x_textbuf = (char *) calloc(length+1, sizeof(char)); 
-  memcpy(x->x_textbuf, buf, length);  
-  freebytes(buf, length+1);
-  
-#ifdef FLITE_DEBUG
-  debug("flite_debug: got text='%s'\n", x->x_textbuf);
-#endif
-  return;
-    
-}
-
-
-/*--------------------------------------------------------------------
- * flite_text : set the text-buffer
- *--------------------------------------------------------------------*/
-static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *argv) {
-
- if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }   
-  x->x_argc = argc;
-  x->x_argv = argv;
-  flite_do_textbuffer(x);
-  return;
-}
-
-
-/*--------------------------------------------------------------------
- * flite_list : parse & synthesize text in one swell foop
- *--------------------------------------------------------------------*/
-static void flite_list(t_flite *x, t_symbol *s, int argc, t_atom *argv) {
- 
- if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  } 
-  flite_text(x,s,argc,argv);
-  flite_synth(x);
-  return;
-}
-
-
-/*--------------------------------------------------------------------
- * flite_set : set arrayname
- *--------------------------------------------------------------------*/
-static void flite_set(t_flite *x, t_symbol *ary) {
-
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  } 
-#ifdef FLITE_DEBUG
-  debug("flite_set: called with arg='%s'\n", ary->s_name);
-#endif
-  x->x_arrayname = ary;
-  return;
-}
-
-
-/*--------------------------------------------------------------------
- * flite_filex : get the full path of the file if it exist 
- * and place it's full path on the struct.
- *--------------------------------------------------------------------*/
-static int flite_filex(t_flite *x, t_symbol *name) {
-    
-  char completefilename[MAXPDSTRING];
-
-  const char* filename = name->s_name;
-  char realdir[MAXPDSTRING], *realname = NULL;
-  int fd;
-  fd = canvas_open(x->x_canvas, filename, "", realdir, &realname, MAXPDSTRING, 0);
-      if(fd < 0){
-          pd_error(x, "flite: can't find file: %s", filename);
-          x->x_inprogress = 0;
-          return 0;
-        }
-
-  strcpy(completefilename, realdir);
-  strcat(completefilename, "/");
-  strcat(completefilename, realname);
-  strcpy(x->x_reqfile, completefilename);
-  return 1;
-}
-
-/*--------------------------------------------------------------------
- * flite_voice_file : check for the voice file and signal the thread to open it
- *--------------------------------------------------------------------*/
-static void flite_voice_file(t_flite *x, t_symbol *filename) {
-    
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  } 
-    
-  if(!flite_filex(x, filename)) {
-    return;
-  }
-  x->x_inprogress = 1;
-  pthread_mutex_lock(&x->x_mutex);
-  x->x_requestcode = VOXFILE;
-  pthread_mutex_unlock(&x->x_mutex);
-  pthread_cond_signal(&x->x_requestcondition);
-  return;
-}
-
-/*--------------------------------------------------------------------
- * flite_thrd_voice_file : open the voice file.
- *--------------------------------------------------------------------*/
-static void flite_thrd_voice_file(t_flite *x) {  
-  
-#ifdef FLITE_DEBUG
-  debug("flite_thrd_voice_file: called with arg='%s'\n", x->x_reqfile);
-#endif
-  flite_add_lang("eng",usenglish_init,cmulex_init);
-  flite_add_lang("usenglish",usenglish_init,cmulex_init);
-  x->x_voice = flite_voice_load(x->x_reqfile);
-  pthread_mutex_lock(&x->x_mutex);
-  if (x->x_requestcode != QUIT)
-  {
-    if (x->x_requestcode != IDLE) 
-    {
-      sys_lock();
-      x->x_tick_ctl = VOXFILEDONE;
-      clock_delay(x->x_clock, 0);
-      sys_unlock();
-    }
-  }
-  pthread_mutex_unlock(&x->x_mutex);
-  return;
-}
-
-/*--------------------------------------------------------------------
- * flite_voice : set one of the built-in voices for the synthesizer.
- *--------------------------------------------------------------------*/
-static void flite_voice(t_flite *x, t_symbol *vox) {
-
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }
-
-#ifdef FLITE_DEBUG
-  debug("flite_voice: called with arg='%s'\n", vox->s_name);
-#endif
-
-  const char *voxstring;
-  voxstring = vox->s_name;
-  
-  if (!strcmp(voxstring, "awb")) {
-    x->x_voice = register_cmu_us_awb();  
-  } 
-  else if (!strcmp(voxstring, "kal")) {
-    x->x_voice = register_cmu_us_kal();     
-  }
-  else if (!strcmp(voxstring, "kal16")) {
-    x->x_voice = register_cmu_us_kal16();   
-  }
-  else if (!strcmp(voxstring, "rms")) {
-    x->x_voice = register_cmu_us_rms();     
-  }
-  else if (!strcmp(voxstring, "slt")) {
-    x->x_voice = register_cmu_us_slt();     
-  } else {
-    pd_error(x,"flite: unknown voice '%s'. Possible voices are: 'awb', 'kal', 'kal16', 'rms' or 'slt'.", voxstring );
-    return; 
-  }
-  return;  
-}
-
-/*--------------------------------------------------------------------
- * flite_read_textfile : read the text file 
- *--------------------------------------------------------------------*/
-static void flite_read_textfile(t_flite *x) {
-
-  FILE *fp;
-  fp = fopen(x->x_reqfile, "r");
-  fseek(fp, 0, SEEK_END);
-  int len;
-  len = ftell(fp);
-  fseek(fp, 0, SEEK_SET);  
-  x->x_textbuf = (char *) calloc(len+1, sizeof(char));
-  fread(x->x_textbuf, 1, len, fp);
-  fclose(fp);
-  return;  
-}
-
-/*--------------------------------------------------------------------
- * flite_textfile : if the file exist call flite_read_textfile()
- *--------------------------------------------------------------------*/
-static void flite_textfile(t_flite *x, t_symbol *filename) {
-
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }
-  if(!flite_filex(x, filename)) {
-    return;
-  }
-  flite_read_textfile(x);
-  flite_synth(x);
-  return;
-}
-
-
-/*--------------------------------------------------------------------
- * flite_thrd_textfile : if the file exist call the thread to read it 
- * into the text buffer
- *--------------------------------------------------------------------*/
-static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
- 
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }
-
-  if(!flite_filex(x, filename)) {
-    return;
-  }
-  
-  // -- sanity checks
-  if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
-    return;
-  }
-  
-  x->x_inprogress = 1;
-  pthread_mutex_lock(&x->x_mutex);
-  x->x_requestcode = TEXTFILE;
-  pthread_mutex_unlock(&x->x_mutex);
-  pthread_cond_signal(&x->x_requestcondition);
-  return;  
-}
-
-/*--------------------------------------------------------------------
- * flite_thrd_synth : call the thread to do flite_thread_synth
- *--------------------------------------------------------------------*/
-static void flite_thrd_synth(t_flite *x) {
-  
-  if (x->x_inprogress) {
-    pd_error(x,"%s", thread_waiting);
-    return;
-  }
-    // -- sanity checks
-  if (!(x->x_a = (t_garray *)pd_findbyclass(x->x_arrayname, garray_class))) {
-    pd_error(x,"flite: no such array '%s'", x->x_arrayname->s_name);
-    return;
-  }
-  x->x_inprogress = 1;
-  pthread_mutex_lock(&x->x_mutex);
-  x->x_requestcode = SYNTH;
-  pthread_mutex_unlock(&x->x_mutex);
-  pthread_cond_signal(&x->x_requestcondition);
-  return;  
-}
 
 /*--------------------------------------------------------------------
  * flite_thread : thread
@@ -601,7 +617,7 @@ static void flite_thread(t_flite *x) {
     {
       pthread_mutex_unlock(&x->x_mutex);
       flite_read_textfile(x);
-	  flite_thread_synth(x);
+      flite_thread_synth(x);
       pthread_mutex_lock(&x->x_mutex);
       if (x->x_requestcode == TEXTFILE)
           x->x_requestcode = IDLE;
@@ -629,7 +645,7 @@ static void flite_thread(t_flite *x) {
 }
 
 /*--------------------------------------------------------------------
- * constructor / destructor
+ * constructor 
  *--------------------------------------------------------------------*/
 static void *flite_new(t_symbol *ary)
 {
@@ -661,6 +677,9 @@ static void *flite_new(t_symbol *ary)
   return (void *)x;
 }
 
+/*--------------------------------------------------------------------
+ * destructor
+ *--------------------------------------------------------------------*/
 static void flite_free(t_flite *x) {
   
 #ifdef FLITE_DEBUG
