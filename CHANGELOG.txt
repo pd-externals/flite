@@ -1,5 +1,9 @@
 Changelog for pd-flite
 
+v0.3.2, dated 24-06-2022
+
+- Better thread coding
+
 v0.3.1, dated 21-06-2022
 
 - Add threaded functions for "synth" and "textfile"
