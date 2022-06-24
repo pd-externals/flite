@@ -166,7 +166,7 @@ static void flite_set(t_flite *x, t_symbol *ary) {
 }
 
 /*--------------------------------------------------------------------
- * flite_filer : get the full path of the file if it exist 
+ * flite_filer : get the full path of the file if it exists 
  * and place it's full path on the struct.
  *--------------------------------------------------------------------*/
 static int flite_filer(t_flite *x, t_symbol *name) {
@@ -204,8 +204,7 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
   debug("flite_voice: called with arg='%s'\n", vox->s_name);
 #endif
 
-  const char *voxstring;
-  voxstring = vox->s_name;
+  const char *voxstring = vox->s_name;
   
   if (!strcmp(voxstring, "awb")) {
     x->x_voice = register_cmu_us_awb();  
@@ -229,7 +228,7 @@ static void flite_voice(t_flite *x, t_symbol *vox) {
 }
 
 /*--------------------------------------------------------------------
- * flite_voice_file : check for the voice file and open it
+ * flite_voice_file : check for the voice file and open it.
  *--------------------------------------------------------------------*/
 static void flite_voice_file(t_flite *x, t_symbol *filename) {
     
@@ -248,7 +247,7 @@ static void flite_voice_file(t_flite *x, t_symbol *filename) {
 }
 
 /*--------------------------------------------------------------------
- * flite_voice_file : check for the voice file and signal the thread to open it
+ * flite_voice_file : check for the voice file and signal the thread to open it.
  *--------------------------------------------------------------------*/
 static void flite_thrd_voice_file(t_flite *x, t_symbol *filename) {
     
@@ -342,7 +341,7 @@ static void flite_text(t_flite *x, MOO_UNUSED t_symbol *s, int argc, t_atom *arg
 }
 
 /*--------------------------------------------------------------------
- * flite_textfile : if the file exist read it into the text-buffer and
+ * flite_textfile : if the file exists read it into the text-buffer and
  * synthesize it.
  *--------------------------------------------------------------------*/
 static void flite_textfile(t_flite *x, t_symbol *filename) {
@@ -360,7 +359,7 @@ static void flite_textfile(t_flite *x, t_symbol *filename) {
 }
 
 /*--------------------------------------------------------------------
- * flite_thrd_textfile : if the file exist call the thread to read it 
+ * flite_thrd_textfile : if the file exists call the thread to read it 
  * into the text-buffer and synthesize it.
  *--------------------------------------------------------------------*/
 static void flite_thrd_textfile(t_flite *x, t_symbol *filename) {
