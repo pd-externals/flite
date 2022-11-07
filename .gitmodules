@@ -1,0 +1,3 @@
+[submodule "deps/flite"]
+	path = deps/flite
+	url = https://github.com/festvox/flite
