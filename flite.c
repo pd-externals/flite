@@ -36,8 +36,13 @@
 #define debug(fmt, args...) fprintf(stderr, fmt, ##args);
 
 #include <math.h>
-#include <flite.h>
-#include <cst_wave.h>
+#if HAVE_FLITE_FLITE_H
+# include <flite/flite.h>
+# include <flite/cst_wave.h>
+#else
+# include <flite.h>
+# include <cst_wave.h>
+#endif
 
 
 /*--------------------------------------------------------------------

@@ -5,10 +5,16 @@
 # library name
 lib.name = flite
 
+cflags =
 
+ifneq ($(wildcard flite-master/include/flite.h),)
+  use_bundled_flite=yes
+endif
+
+ifeq ($(use_bundled_flite), 1)
 SOURCE_DIR = ./flite-master
 
-XINCLUDE = -I ${SOURCE_DIR}/include \
+cflags += -I ${SOURCE_DIR}/include \
 	 -I ${SOURCE_DIR}/lang/cmulex \
 	 -I ${SOURCE_DIR}/lang/cmu_grapheme_lang \
 	 -I ${SOURCE_DIR}/lang/cmu_grapheme_lex \
@@ -36,14 +42,34 @@ XINCLUDE = -I ${SOURCE_DIR}/include \
 	 -I ${SOURCE_DIR}/tools \
 	 -I ${SOURCE_DIR}/wince \
 	 ${empty}
+else
+cflags += -DHAVE_FLITE_FLITE_H=1
+ldlibs += \
+	-lflite_cmulex \
+	-lflite_cmu_grapheme_lang \
+	-lflite_cmu_grapheme_lex \
+	-lflite_cmu_indic_lang \
+	-lflite_cmu_indic_lex \
+	-lflite_cmu_time_awb \
+	-lflite_cmu_us_awb \
+	-lflite_cmu_us_kal \
+	-lflite_cmu_us_kal16 \
+	-lflite_cmu_us_rms \
+	-lflite_cmu_us_slt \
+	-lflite \
+	$(empty)
+endif
 
 
-cflags = ${XINCLUDE} -I . -DVERSION='"0.3.2"'
 ldlibs += -lm -lpthread
 
+cflags += -I . -DVERSION='"0.3.2"'
 
 # input source file (class name == source file basename)
-flite.class.sources = flite.c \
+flite.class.sources = flite.c
+
+ifeq ($(use_bundled_flite), yes)
+flite.class.sources += \
 	 ${SOURCE_DIR}/lang/cmulex/cmu_lex.c \
 	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_data.c \
 	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_entries.c \
@@ -256,10 +282,10 @@ EXCLUDEDFILES = \
 	 ${SOURCE_DIR}/main/t2p_main.c \
 	 ${SOURCE_DIR}/main/word_times_main.c \
 	 ${empty}
-
+endif
 
 define forWindows
-  XINCLUDE += \
+  cflags += \
 	-DCST_NO_SOCKETS \
 	-DUNDER_WINDOWS \
 	-DWIN32 \
@@ -268,7 +294,7 @@ define forWindows
 endef
 
 define forDarwin
-  XINCLUDE += \
+  cflags += \
 	-DCST_AUDIO_NONE \
 	-no-cpp-precomp \
     ${empty}
