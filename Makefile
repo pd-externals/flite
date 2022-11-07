@@ -55,6 +55,7 @@ ldlibs += \
 	-lflite_cmu_us_kal16 \
 	-lflite_cmu_us_rms \
 	-lflite_cmu_us_slt \
+	-lflite_usenglish \
 	-lflite \
 	$(empty)
 endif
