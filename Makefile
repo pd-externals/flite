@@ -7,40 +7,39 @@ lib.name = flite
 
 cflags =
 
-ifneq ($(wildcard flite-master/include/flite.h),)
+BUNDLED_FLITE = ./deps/flite
+ifneq ($(wildcard $(BUNDLED_FLITE)/include/flite.h),)
   use_bundled_flite=yes
 endif
 
-ifeq ($(use_bundled_flite), 1)
-SOURCE_DIR = ./flite-master
-
-cflags += -I ${SOURCE_DIR}/include \
-	 -I ${SOURCE_DIR}/lang/cmulex \
-	 -I ${SOURCE_DIR}/lang/cmu_grapheme_lang \
-	 -I ${SOURCE_DIR}/lang/cmu_grapheme_lex \
-	 -I ${SOURCE_DIR}/lang/cmu_indic_lang \
-	 -I ${SOURCE_DIR}/lang/cmu_indic_lex \
-	 -I ${SOURCE_DIR}/lang/cmu_time_awb \
-	 -I ${SOURCE_DIR}/lang/cmu_us_awb \
-	 -I ${SOURCE_DIR}/lang/cmu_us_kal \
-	 -I ${SOURCE_DIR}/lang/cmu_us_rms \
-	 -I ${SOURCE_DIR}/lang/cmu_us_slt \
-	 -I ${SOURCE_DIR}/lang/usenglish \
-	 -I ${SOURCE_DIR}/main \
-	 -I ${SOURCE_DIR}/sapi/FliteTTSEngineObj \
-	 -I ${SOURCE_DIR}/src/audio \
-	 -I ${SOURCE_DIR}/src/cg \
-	 -I ${SOURCE_DIR}/src/hrg \
-	 -I ${SOURCE_DIR}/src/lexicon \
-	 -I ${SOURCE_DIR}/src/regex \
-	 -I ${SOURCE_DIR}/src/speech \
-	 -I ${SOURCE_DIR}/src/stats \
-	 -I ${SOURCE_DIR}/src/synth \
-	 -I ${SOURCE_DIR}/src/utils \
-	 -I ${SOURCE_DIR}/src/wavesynth \
-	 -I ${SOURCE_DIR}/testsuite \
-	 -I ${SOURCE_DIR}/tools \
-	 -I ${SOURCE_DIR}/wince \
+ifeq ($(use_bundled_flite), yes)
+cflags += -I ${BUNDLED_FLITE}/include \
+	 -I ${BUNDLED_FLITE}/lang/cmulex \
+	 -I ${BUNDLED_FLITE}/lang/cmu_grapheme_lang \
+	 -I ${BUNDLED_FLITE}/lang/cmu_grapheme_lex \
+	 -I ${BUNDLED_FLITE}/lang/cmu_indic_lang \
+	 -I ${BUNDLED_FLITE}/lang/cmu_indic_lex \
+	 -I ${BUNDLED_FLITE}/lang/cmu_time_awb \
+	 -I ${BUNDLED_FLITE}/lang/cmu_us_awb \
+	 -I ${BUNDLED_FLITE}/lang/cmu_us_kal \
+	 -I ${BUNDLED_FLITE}/lang/cmu_us_rms \
+	 -I ${BUNDLED_FLITE}/lang/cmu_us_slt \
+	 -I ${BUNDLED_FLITE}/lang/usenglish \
+	 -I ${BUNDLED_FLITE}/main \
+	 -I ${BUNDLED_FLITE}/sapi/FliteTTSEngineObj \
+	 -I ${BUNDLED_FLITE}/src/audio \
+	 -I ${BUNDLED_FLITE}/src/cg \
+	 -I ${BUNDLED_FLITE}/src/hrg \
+	 -I ${BUNDLED_FLITE}/src/lexicon \
+	 -I ${BUNDLED_FLITE}/src/regex \
+	 -I ${BUNDLED_FLITE}/src/speech \
+	 -I ${BUNDLED_FLITE}/src/stats \
+	 -I ${BUNDLED_FLITE}/src/synth \
+	 -I ${BUNDLED_FLITE}/src/utils \
+	 -I ${BUNDLED_FLITE}/src/wavesynth \
+	 -I ${BUNDLED_FLITE}/testsuite \
+	 -I ${BUNDLED_FLITE}/tools \
+	 -I ${BUNDLED_FLITE}/wince \
 	 ${empty}
 else
 cflags += -DHAVE_FLITE_FLITE_H=1
@@ -70,217 +69,217 @@ flite.class.sources = flite.c
 
 ifeq ($(use_bundled_flite), yes)
 flite.class.sources += \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lex.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_data.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_entries.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lts_model.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lts_rules.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_postlex.c \
-	 ${SOURCE_DIR}/lang/cmu_grapheme_lang/cmu_grapheme_lang.c \
-	 ${SOURCE_DIR}/lang/cmu_grapheme_lang/cmu_grapheme_phoneset.c \
-	 ${SOURCE_DIR}/lang/cmu_grapheme_lang/cmu_grapheme_phrasing_cart.c \
-	 ${SOURCE_DIR}/lang/cmu_grapheme_lang/graph_gpos.c \
-	 ${SOURCE_DIR}/lang/cmu_grapheme_lex/cmu_grapheme_lex.c \
-	 ${SOURCE_DIR}/lang/cmu_grapheme_lex/grapheme_unitran_tables.c \
-	 ${SOURCE_DIR}/lang/cmu_indic_lang/cmu_indic_lang.c \
-	 ${SOURCE_DIR}/lang/cmu_indic_lang/cmu_indic_phoneset.c \
-	 ${SOURCE_DIR}/lang/cmu_indic_lang/cmu_indic_phrasing_cart.c \
-	 ${SOURCE_DIR}/lang/cmu_indic_lex/cmu_indic_lex.c \
-	 ${SOURCE_DIR}/lang/cmu_time_awb/cmu_time_awb.c \
-	 ${SOURCE_DIR}/lang/cmu_time_awb/cmu_time_awb_cart.c \
-	 ${SOURCE_DIR}/lang/cmu_time_awb/cmu_time_awb_clunits.c \
-	 ${SOURCE_DIR}/lang/cmu_time_awb/cmu_time_awb_lex_entry.c \
-	 ${SOURCE_DIR}/lang/cmu_time_awb/cmu_time_awb_lpc.c \
-	 ${SOURCE_DIR}/lang/cmu_time_awb/cmu_time_awb_mcep.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_cg.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_cg_durmodel.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_cg_f0_trees.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_cg_phonestate.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_cg_single_mcep_trees.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_cg_single_params.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_spamf0_accent.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_spamf0_accent_params.c \
-	 ${SOURCE_DIR}/lang/cmu_us_awb/cmu_us_awb_spamf0_phrase.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal/cmu_us_kal.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal/cmu_us_kal_diphone.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal/cmu_us_kal_lpc.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal/cmu_us_kal_res.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal/cmu_us_kal_residx.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal/cmu_us_kal_ressize.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal16/cmu_us_kal16.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal16/cmu_us_kal16_diphone.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal16/cmu_us_kal16_lpc.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal16/cmu_us_kal16_res.c \
-	 ${SOURCE_DIR}/lang/cmu_us_kal16/cmu_us_kal16_residx.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_cg.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_cg_durmodel.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_cg_f0_trees.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_cg_phonestate.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_cg_single_mcep_trees.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_cg_single_params.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_spamf0_accent.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_spamf0_accent_params.c \
-	 ${SOURCE_DIR}/lang/cmu_us_rms/cmu_us_rms_spamf0_phrase.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_cg.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_cg_durmodel.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_cg_f0_trees.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_cg_phonestate.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_cg_single_mcep_trees.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_cg_single_params.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_spamf0_accent.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_spamf0_accent_params.c \
-	 ${SOURCE_DIR}/lang/cmu_us_slt/cmu_us_slt_spamf0_phrase.c \
-	 ${SOURCE_DIR}/lang/usenglish/usenglish.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_aswd.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_durz_cart.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_dur_stats.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_expand.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_f0lr.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_f0_model.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_ffeatures.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_gpos.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_int_accent_cart.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_int_tone_cart.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_nums_cart.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_phoneset.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_phrasing_cart.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_pos_cart.c \
-	 ${SOURCE_DIR}/lang/usenglish/us_text.c \
-	 ${SOURCE_DIR}/src/audio/au_none.c \
-	 ${SOURCE_DIR}/src/audio/audio.c \
-	 ${SOURCE_DIR}/src/audio/au_streaming.c \
-	 ${SOURCE_DIR}/src/cg/cst_cg.c \
-	 ${SOURCE_DIR}/src/cg/cst_cg_dump_voice.c \
-	 ${SOURCE_DIR}/src/cg/cst_cg_load_voice.c \
-	 ${SOURCE_DIR}/src/cg/cst_cg_map.c \
-	 ${SOURCE_DIR}/src/cg/cst_mlpg.c \
-	 ${SOURCE_DIR}/src/cg/cst_mlsa.c \
-	 ${SOURCE_DIR}/src/cg/cst_spamf0.c \
-	 ${SOURCE_DIR}/src/cg/cst_vc.c \
-	 ${SOURCE_DIR}/src/hrg/cst_ffeature.c \
-	 ${SOURCE_DIR}/src/hrg/cst_item.c \
-	 ${SOURCE_DIR}/src/hrg/cst_relation.c \
-	 ${SOURCE_DIR}/src/hrg/cst_rel_io.c \
-	 ${SOURCE_DIR}/src/hrg/cst_utterance.c \
-	 ${SOURCE_DIR}/src/lexicon/cst_lexicon.c \
-	 ${SOURCE_DIR}/src/lexicon/cst_lts.c \
-	 ${SOURCE_DIR}/src/lexicon/cst_lts_rewrites.c \
-	 ${SOURCE_DIR}/src/regex/cst_regex.c \
-	 ${SOURCE_DIR}/src/regex/regexp.c \
-	 ${SOURCE_DIR}/src/regex/regsub.c \
-	 ${SOURCE_DIR}/src/speech/cst_lpcres.c \
-	 ${SOURCE_DIR}/src/speech/cst_track.c \
-	 ${SOURCE_DIR}/src/speech/cst_track_io.c \
-	 ${SOURCE_DIR}/src/speech/cst_wave.c \
-	 ${SOURCE_DIR}/src/speech/cst_wave_io.c \
-	 ${SOURCE_DIR}/src/speech/cst_wave_utils.c \
-	 ${SOURCE_DIR}/src/speech/g721.c \
-	 ${SOURCE_DIR}/src/speech/g723_24.c \
-	 ${SOURCE_DIR}/src/speech/g723_40.c \
-	 ${SOURCE_DIR}/src/speech/g72x.c \
-	 ${SOURCE_DIR}/src/speech/rateconv.c \
-	 ${SOURCE_DIR}/src/stats/cst_cart.c \
-	 ${SOURCE_DIR}/src/stats/cst_ss.c \
-	 ${SOURCE_DIR}/src/stats/cst_viterbi.c \
-	 ${SOURCE_DIR}/src/synth/cst_ffeatures.c \
-	 ${SOURCE_DIR}/src/synth/cst_phoneset.c \
-	 ${SOURCE_DIR}/src/synth/cst_ssml.c \
-	 ${SOURCE_DIR}/src/synth/cst_synth.c \
-	 ${SOURCE_DIR}/src/synth/cst_utt_utils.c \
-	 ${SOURCE_DIR}/src/synth/cst_voice.c \
-	 ${SOURCE_DIR}/src/synth/flite.c \
-	 ${SOURCE_DIR}/src/utils/cst_alloc.c \
-	 ${SOURCE_DIR}/src/utils/cst_args.c \
-	 ${SOURCE_DIR}/src/utils/cst_endian.c \
-	 ${SOURCE_DIR}/src/utils/cst_error.c \
-	 ${SOURCE_DIR}/src/utils/cst_features.c \
-	 ${SOURCE_DIR}/src/utils/cst_file_stdio.c \
-	 ${SOURCE_DIR}/src/utils/cst_mmap_none.c \
-	 ${SOURCE_DIR}/src/utils/cst_socket.c \
-	 ${SOURCE_DIR}/src/utils/cst_string.c \
-	 ${SOURCE_DIR}/src/utils/cst_tokenstream.c \
-	 ${SOURCE_DIR}/src/utils/cst_url.c \
-	 ${SOURCE_DIR}/src/utils/cst_val.c \
-	 ${SOURCE_DIR}/src/utils/cst_val_const.c \
-	 ${SOURCE_DIR}/src/utils/cst_val_user.c \
-	 ${SOURCE_DIR}/src/utils/cst_wchar.c \
-	 ${SOURCE_DIR}/src/wavesynth/cst_clunits.c \
-	 ${SOURCE_DIR}/src/wavesynth/cst_diphone.c \
-	 ${SOURCE_DIR}/src/wavesynth/cst_reflpc.c \
-	 ${SOURCE_DIR}/src/wavesynth/cst_sigpr.c \
-	 ${SOURCE_DIR}/src/wavesynth/cst_sts.c \
-	 ${SOURCE_DIR}/src/wavesynth/cst_units.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lex.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lex_data.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lex_entries.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lts_model.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lts_rules.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_postlex.c \
+	 ${BUNDLED_FLITE}/lang/cmu_grapheme_lang/cmu_grapheme_lang.c \
+	 ${BUNDLED_FLITE}/lang/cmu_grapheme_lang/cmu_grapheme_phoneset.c \
+	 ${BUNDLED_FLITE}/lang/cmu_grapheme_lang/cmu_grapheme_phrasing_cart.c \
+	 ${BUNDLED_FLITE}/lang/cmu_grapheme_lang/graph_gpos.c \
+	 ${BUNDLED_FLITE}/lang/cmu_grapheme_lex/cmu_grapheme_lex.c \
+	 ${BUNDLED_FLITE}/lang/cmu_grapheme_lex/grapheme_unitran_tables.c \
+	 ${BUNDLED_FLITE}/lang/cmu_indic_lang/cmu_indic_lang.c \
+	 ${BUNDLED_FLITE}/lang/cmu_indic_lang/cmu_indic_phoneset.c \
+	 ${BUNDLED_FLITE}/lang/cmu_indic_lang/cmu_indic_phrasing_cart.c \
+	 ${BUNDLED_FLITE}/lang/cmu_indic_lex/cmu_indic_lex.c \
+	 ${BUNDLED_FLITE}/lang/cmu_time_awb/cmu_time_awb.c \
+	 ${BUNDLED_FLITE}/lang/cmu_time_awb/cmu_time_awb_cart.c \
+	 ${BUNDLED_FLITE}/lang/cmu_time_awb/cmu_time_awb_clunits.c \
+	 ${BUNDLED_FLITE}/lang/cmu_time_awb/cmu_time_awb_lex_entry.c \
+	 ${BUNDLED_FLITE}/lang/cmu_time_awb/cmu_time_awb_lpc.c \
+	 ${BUNDLED_FLITE}/lang/cmu_time_awb/cmu_time_awb_mcep.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_cg.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_cg_durmodel.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_cg_f0_trees.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_cg_phonestate.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_cg_single_mcep_trees.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_cg_single_params.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_spamf0_accent.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_spamf0_accent_params.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_awb/cmu_us_awb_spamf0_phrase.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal/cmu_us_kal.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal/cmu_us_kal_diphone.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal/cmu_us_kal_lpc.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal/cmu_us_kal_res.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal/cmu_us_kal_residx.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal/cmu_us_kal_ressize.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal16/cmu_us_kal16.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal16/cmu_us_kal16_diphone.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal16/cmu_us_kal16_lpc.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal16/cmu_us_kal16_res.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_kal16/cmu_us_kal16_residx.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_cg.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_cg_durmodel.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_cg_f0_trees.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_cg_phonestate.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_cg_single_mcep_trees.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_cg_single_params.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_spamf0_accent.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_spamf0_accent_params.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_rms/cmu_us_rms_spamf0_phrase.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_cg.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_cg_durmodel.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_cg_f0_trees.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_cg_phonestate.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_cg_single_mcep_trees.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_cg_single_params.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_spamf0_accent.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_spamf0_accent_params.c \
+	 ${BUNDLED_FLITE}/lang/cmu_us_slt/cmu_us_slt_spamf0_phrase.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/usenglish.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_aswd.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_durz_cart.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_dur_stats.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_expand.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_f0lr.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_f0_model.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_ffeatures.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_gpos.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_int_accent_cart.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_int_tone_cart.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_nums_cart.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_phoneset.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_phrasing_cart.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_pos_cart.c \
+	 ${BUNDLED_FLITE}/lang/usenglish/us_text.c \
+	 ${BUNDLED_FLITE}/src/audio/au_none.c \
+	 ${BUNDLED_FLITE}/src/audio/audio.c \
+	 ${BUNDLED_FLITE}/src/audio/au_streaming.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_cg.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_cg_dump_voice.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_cg_load_voice.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_cg_map.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_mlpg.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_mlsa.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_spamf0.c \
+	 ${BUNDLED_FLITE}/src/cg/cst_vc.c \
+	 ${BUNDLED_FLITE}/src/hrg/cst_ffeature.c \
+	 ${BUNDLED_FLITE}/src/hrg/cst_item.c \
+	 ${BUNDLED_FLITE}/src/hrg/cst_relation.c \
+	 ${BUNDLED_FLITE}/src/hrg/cst_rel_io.c \
+	 ${BUNDLED_FLITE}/src/hrg/cst_utterance.c \
+	 ${BUNDLED_FLITE}/src/lexicon/cst_lexicon.c \
+	 ${BUNDLED_FLITE}/src/lexicon/cst_lts.c \
+	 ${BUNDLED_FLITE}/src/lexicon/cst_lts_rewrites.c \
+	 ${BUNDLED_FLITE}/src/regex/cst_regex.c \
+	 ${BUNDLED_FLITE}/src/regex/regexp.c \
+	 ${BUNDLED_FLITE}/src/regex/regsub.c \
+	 ${BUNDLED_FLITE}/src/speech/cst_lpcres.c \
+	 ${BUNDLED_FLITE}/src/speech/cst_track.c \
+	 ${BUNDLED_FLITE}/src/speech/cst_track_io.c \
+	 ${BUNDLED_FLITE}/src/speech/cst_wave.c \
+	 ${BUNDLED_FLITE}/src/speech/cst_wave_io.c \
+	 ${BUNDLED_FLITE}/src/speech/cst_wave_utils.c \
+	 ${BUNDLED_FLITE}/src/speech/g721.c \
+	 ${BUNDLED_FLITE}/src/speech/g723_24.c \
+	 ${BUNDLED_FLITE}/src/speech/g723_40.c \
+	 ${BUNDLED_FLITE}/src/speech/g72x.c \
+	 ${BUNDLED_FLITE}/src/speech/rateconv.c \
+	 ${BUNDLED_FLITE}/src/stats/cst_cart.c \
+	 ${BUNDLED_FLITE}/src/stats/cst_ss.c \
+	 ${BUNDLED_FLITE}/src/stats/cst_viterbi.c \
+	 ${BUNDLED_FLITE}/src/synth/cst_ffeatures.c \
+	 ${BUNDLED_FLITE}/src/synth/cst_phoneset.c \
+	 ${BUNDLED_FLITE}/src/synth/cst_ssml.c \
+	 ${BUNDLED_FLITE}/src/synth/cst_synth.c \
+	 ${BUNDLED_FLITE}/src/synth/cst_utt_utils.c \
+	 ${BUNDLED_FLITE}/src/synth/cst_voice.c \
+	 ${BUNDLED_FLITE}/src/synth/flite.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_alloc.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_args.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_endian.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_error.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_features.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_file_stdio.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_mmap_none.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_socket.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_string.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_tokenstream.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_url.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_val.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_val_const.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_val_user.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_wchar.c \
+	 ${BUNDLED_FLITE}/src/wavesynth/cst_clunits.c \
+	 ${BUNDLED_FLITE}/src/wavesynth/cst_diphone.c \
+	 ${BUNDLED_FLITE}/src/wavesynth/cst_reflpc.c \
+	 ${BUNDLED_FLITE}/src/wavesynth/cst_sigpr.c \
+	 ${BUNDLED_FLITE}/src/wavesynth/cst_sts.c \
+	 ${BUNDLED_FLITE}/src/wavesynth/cst_units.c \
 	 ${empty}
 
 # unused sources
 EXCLUDEDFILES = \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_data_raw.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_entries_huff_table.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_num_bytes.c \
-	 ${SOURCE_DIR}/lang/cmulex/cmu_lex_phones_huff_table.c \
-	 ${SOURCE_DIR}/sapi/FliteTTSEngineObj/flite_sapi_usenglish.c \
-	 ${SOURCE_DIR}/src/audio/auclient.c \
-	 ${SOURCE_DIR}/src/audio/auserver.c \
-	 ${SOURCE_DIR}/src/audio/au_alsa.c \
-	 ${SOURCE_DIR}/src/audio/au_command.c \
-	 ${SOURCE_DIR}/src/audio/au_oss.c \
-	 ${SOURCE_DIR}/src/audio/au_palmos.c \
-	 ${SOURCE_DIR}/src/audio/au_pulseaudio.c \
-	 ${SOURCE_DIR}/src/audio/au_sun.c \
-	 ${SOURCE_DIR}/src/audio/au_win.c \
-	 ${SOURCE_DIR}/src/audio/au_wince.c \
-	 ${SOURCE_DIR}/src/utils/cst_file_palmos.c \
-	 ${SOURCE_DIR}/src/utils/cst_file_wince.c \
-	 ${SOURCE_DIR}/src/utils/cst_mmap_posix.c \
-	 ${SOURCE_DIR}/src/utils/cst_mmap_win32.c \
-	 ${SOURCE_DIR}/testsuite/asciiS2U_main.c \
-	 ${SOURCE_DIR}/testsuite/asciiU2S_main.c \
-	 ${SOURCE_DIR}/testsuite/bin2ascii_main.c \
-	 ${SOURCE_DIR}/testsuite/by_word_main.c \
-	 ${SOURCE_DIR}/testsuite/combine_waves_main.c \
-	 ${SOURCE_DIR}/testsuite/compare_wave_main.c \
-	 ${SOURCE_DIR}/testsuite/dcoffset_wave_main.c \
-	 ${SOURCE_DIR}/testsuite/flite_test_main.c \
-	 ${SOURCE_DIR}/testsuite/hrg_test_main.c \
-	 ${SOURCE_DIR}/testsuite/kal_test_main.c \
-	 ${SOURCE_DIR}/testsuite/lex_lookup_main.c \
-	 ${SOURCE_DIR}/testsuite/lex_test_main.c \
-	 ${SOURCE_DIR}/testsuite/lpc_resynth_main.c \
-	 ${SOURCE_DIR}/testsuite/lpc_test2_main.c \
-	 ${SOURCE_DIR}/testsuite/lpc_test_main.c \
-	 ${SOURCE_DIR}/testsuite/multi_thread_main.c \
-	 ${SOURCE_DIR}/testsuite/nums_test_main.c \
-	 ${SOURCE_DIR}/testsuite/play_client_main.c \
-	 ${SOURCE_DIR}/testsuite/play_server_main.c \
-	 ${SOURCE_DIR}/testsuite/play_sync_main.c \
-	 ${SOURCE_DIR}/testsuite/play_wave_main.c \
-	 ${SOURCE_DIR}/testsuite/record_in_noise_main.c \
-	 ${SOURCE_DIR}/testsuite/record_wave_main.c \
-	 ${SOURCE_DIR}/testsuite/regex_test_main.c \
-	 ${SOURCE_DIR}/testsuite/rfc_main.c \
-	 ${SOURCE_DIR}/testsuite/token_test_main.c \
-	 ${SOURCE_DIR}/testsuite/tris1_main.c \
-	 ${SOURCE_DIR}/testsuite/utt_test_main.c \
-	 ${SOURCE_DIR}/tools/find_sts_main.c \
-	 ${SOURCE_DIR}/tools/flite_sort_main.c \
-	 ${SOURCE_DIR}/tools/LANGNAME_lang.c \
-	 ${SOURCE_DIR}/tools/LANGNAME_lex.c \
-	 ${SOURCE_DIR}/tools/VOICE_cg.c \
-	 ${SOURCE_DIR}/tools/VOICE_clunits.c \
-	 ${SOURCE_DIR}/tools/VOICE_diphone.c \
-	 ${SOURCE_DIR}/tools/VOICE_ldom.c \
-	 ${SOURCE_DIR}/wince/flowm_flite.c \
-	 ${SOURCE_DIR}/wince/flowm_main.c \
-	 ${SOURCE_DIR}/main/compile_regexes.c \
-	 ${SOURCE_DIR}/main/flitevox_info_main.c \
-	 ${SOURCE_DIR}/main/flite_lang_list.c \
-	 ${SOURCE_DIR}/main/flite_main.c \
-	 ${SOURCE_DIR}/main/flite_time_main.c \
-	 ${SOURCE_DIR}/main/t2p_main.c \
-	 ${SOURCE_DIR}/main/word_times_main.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lex_data_raw.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lex_entries_huff_table.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lex_num_bytes.c \
+	 ${BUNDLED_FLITE}/lang/cmulex/cmu_lex_phones_huff_table.c \
+	 ${BUNDLED_FLITE}/sapi/FliteTTSEngineObj/flite_sapi_usenglish.c \
+	 ${BUNDLED_FLITE}/src/audio/auclient.c \
+	 ${BUNDLED_FLITE}/src/audio/auserver.c \
+	 ${BUNDLED_FLITE}/src/audio/au_alsa.c \
+	 ${BUNDLED_FLITE}/src/audio/au_command.c \
+	 ${BUNDLED_FLITE}/src/audio/au_oss.c \
+	 ${BUNDLED_FLITE}/src/audio/au_palmos.c \
+	 ${BUNDLED_FLITE}/src/audio/au_pulseaudio.c \
+	 ${BUNDLED_FLITE}/src/audio/au_sun.c \
+	 ${BUNDLED_FLITE}/src/audio/au_win.c \
+	 ${BUNDLED_FLITE}/src/audio/au_wince.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_file_palmos.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_file_wince.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_mmap_posix.c \
+	 ${BUNDLED_FLITE}/src/utils/cst_mmap_win32.c \
+	 ${BUNDLED_FLITE}/testsuite/asciiS2U_main.c \
+	 ${BUNDLED_FLITE}/testsuite/asciiU2S_main.c \
+	 ${BUNDLED_FLITE}/testsuite/bin2ascii_main.c \
+	 ${BUNDLED_FLITE}/testsuite/by_word_main.c \
+	 ${BUNDLED_FLITE}/testsuite/combine_waves_main.c \
+	 ${BUNDLED_FLITE}/testsuite/compare_wave_main.c \
+	 ${BUNDLED_FLITE}/testsuite/dcoffset_wave_main.c \
+	 ${BUNDLED_FLITE}/testsuite/flite_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/hrg_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/kal_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/lex_lookup_main.c \
+	 ${BUNDLED_FLITE}/testsuite/lex_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/lpc_resynth_main.c \
+	 ${BUNDLED_FLITE}/testsuite/lpc_test2_main.c \
+	 ${BUNDLED_FLITE}/testsuite/lpc_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/multi_thread_main.c \
+	 ${BUNDLED_FLITE}/testsuite/nums_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/play_client_main.c \
+	 ${BUNDLED_FLITE}/testsuite/play_server_main.c \
+	 ${BUNDLED_FLITE}/testsuite/play_sync_main.c \
+	 ${BUNDLED_FLITE}/testsuite/play_wave_main.c \
+	 ${BUNDLED_FLITE}/testsuite/record_in_noise_main.c \
+	 ${BUNDLED_FLITE}/testsuite/record_wave_main.c \
+	 ${BUNDLED_FLITE}/testsuite/regex_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/rfc_main.c \
+	 ${BUNDLED_FLITE}/testsuite/token_test_main.c \
+	 ${BUNDLED_FLITE}/testsuite/tris1_main.c \
+	 ${BUNDLED_FLITE}/testsuite/utt_test_main.c \
+	 ${BUNDLED_FLITE}/tools/find_sts_main.c \
+	 ${BUNDLED_FLITE}/tools/flite_sort_main.c \
+	 ${BUNDLED_FLITE}/tools/LANGNAME_lang.c \
+	 ${BUNDLED_FLITE}/tools/LANGNAME_lex.c \
+	 ${BUNDLED_FLITE}/tools/VOICE_cg.c \
+	 ${BUNDLED_FLITE}/tools/VOICE_clunits.c \
+	 ${BUNDLED_FLITE}/tools/VOICE_diphone.c \
+	 ${BUNDLED_FLITE}/tools/VOICE_ldom.c \
+	 ${BUNDLED_FLITE}/wince/flowm_flite.c \
+	 ${BUNDLED_FLITE}/wince/flowm_main.c \
+	 ${BUNDLED_FLITE}/main/compile_regexes.c \
+	 ${BUNDLED_FLITE}/main/flitevox_info_main.c \
+	 ${BUNDLED_FLITE}/main/flite_lang_list.c \
+	 ${BUNDLED_FLITE}/main/flite_main.c \
+	 ${BUNDLED_FLITE}/main/flite_time_main.c \
+	 ${BUNDLED_FLITE}/main/t2p_main.c \
+	 ${BUNDLED_FLITE}/main/word_times_main.c \
 	 ${empty}
 endif
 
