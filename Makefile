@@ -1,4 +1,4 @@
-# Makefile to build class 'helloworld' for Pure Data.
+# Makefile to build class 'flite' for Pure Data.
 # Needs Makefile.pdlibbuilder as helper makefile for platform-dependent build
 # settings and rules.
 
@@ -36,7 +36,7 @@ XINCLUDE = -I ${SOURCE_DIR}/include \
 	 -I ${SOURCE_DIR}/tools \
 	 -I ${SOURCE_DIR}/wince \
 	 ${empty}
-	 
+
 
 cflags = ${XINCLUDE} -I . -DVERSION='"0.3.2"'
 ldlibs += -lm -lpthread
@@ -256,15 +256,15 @@ EXCLUDEDFILES = \
 	 ${SOURCE_DIR}/main/t2p_main.c \
 	 ${SOURCE_DIR}/main/word_times_main.c \
 	 ${empty}
-	 
-	 
+
+
 define forWindows
   XINCLUDE += \
 	-DCST_NO_SOCKETS \
 	-DUNDER_WINDOWS \
 	-DWIN32 \
     ${empty}
-  ldlibs += 
+  ldlibs +=
 endef
 
 define forDarwin
@@ -279,7 +279,7 @@ datafiles = \
 	flite-help.pd \
 	flite-numbers.pd flite-test2.pd flite-test.pd \
 	README.md flite-meta.pd CHANGELOG.txt \
-	
+
 
 #alldebug: CPPFLAGS+=-DFLITE_DEBUG=1
 
