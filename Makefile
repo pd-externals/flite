@@ -14,34 +14,11 @@ ifneq ($(wildcard $(BUNDLED_FLITE)/include/flite.h),)
 endif
 
 ifeq ($(use_bundled_flite), yes)
-cflags += -I $(BUNDLED_FLITE)/include \
-	 -I $(BUNDLED_FLITE)/lang/cmulex \
-	 -I $(BUNDLED_FLITE)/lang/cmu_grapheme_lang \
-	 -I $(BUNDLED_FLITE)/lang/cmu_grapheme_lex \
-	 -I $(BUNDLED_FLITE)/lang/cmu_indic_lang \
-	 -I $(BUNDLED_FLITE)/lang/cmu_indic_lex \
-	 -I $(BUNDLED_FLITE)/lang/cmu_time_awb \
-	 -I $(BUNDLED_FLITE)/lang/cmu_us_awb \
-	 -I $(BUNDLED_FLITE)/lang/cmu_us_kal \
-	 -I $(BUNDLED_FLITE)/lang/cmu_us_rms \
-	 -I $(BUNDLED_FLITE)/lang/cmu_us_slt \
-	 -I $(BUNDLED_FLITE)/lang/usenglish \
-	 -I $(BUNDLED_FLITE)/main \
-	 -I $(BUNDLED_FLITE)/sapi/FliteTTSEngineObj \
-	 -I $(BUNDLED_FLITE)/src/audio \
-	 -I $(BUNDLED_FLITE)/src/cg \
-	 -I $(BUNDLED_FLITE)/src/hrg \
-	 -I $(BUNDLED_FLITE)/src/lexicon \
-	 -I $(BUNDLED_FLITE)/src/regex \
-	 -I $(BUNDLED_FLITE)/src/speech \
-	 -I $(BUNDLED_FLITE)/src/stats \
-	 -I $(BUNDLED_FLITE)/src/synth \
-	 -I $(BUNDLED_FLITE)/src/utils \
-	 -I $(BUNDLED_FLITE)/src/wavesynth \
-	 -I $(BUNDLED_FLITE)/testsuite \
-	 -I $(BUNDLED_FLITE)/tools \
-	 -I $(BUNDLED_FLITE)/wince \
-	 $(empty)
+cflags += \
+	-I$(BUNDLED_FLITE)/include \
+	-I$(BUNDLED_FLITE)/lang/cmulex \
+	-I$(BUNDLED_FLITE)/lang/usenglish \
+	$(empty)
 
 # urgh, this is ugly!
 # we cannot really statically link against flite on Windows,
