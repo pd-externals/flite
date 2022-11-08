@@ -4,14 +4,14 @@ Date: Thu, 26 May 2022 18:18:05 -0300
 Subject: [PATCH] Windows object now works
 
 ---
- flite-master/include/flite.h   | 10 +---------
- flite-master/src/synth/flite.c | 13 ++++---------
+ deps/flite/include/flite.h   | 10 +---------
+ deps/flite/src/synth/flite.c | 13 ++++---------
  2 files changed, 5 insertions(+), 18 deletions(-)
 
-diff --git a/flite-master/include/flite.h b/flite-master/include/flite.h
+diff --git a/deps/flite/include/flite.h b/deps/flite/include/flite.h
 index 8814d97..3a2bd1c 100644
---- a/flite-master/include/flite.h
-+++ b/flite-master/include/flite.h
+--- a/deps/flite/include/flite.h
++++ b/deps/flite/include/flite.h
 @@ -65,15 +65,7 @@ extern "C" {
  #include "cst_units.h"
  #include "cst_tokenstream.h"
@@ -29,10 +29,10 @@ index 8814d97..3a2bd1c 100644
  
  /* Public functions */
  int flite_init();
-diff --git a/flite-master/src/synth/flite.c b/flite-master/src/synth/flite.c
+diff --git a/deps/flite/src/synth/flite.c b/deps/flite/src/synth/flite.c
 index d85fe1a..ec0e0eb 100644
---- a/flite-master/src/synth/flite.c
-+++ b/flite-master/src/synth/flite.c
+--- a/deps/flite/src/synth/flite.c
++++ b/deps/flite/src/synth/flite.c
 @@ -44,12 +44,7 @@
  #include "cst_clunits.h"
  #include "cst_cg.h"
