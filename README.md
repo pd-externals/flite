@@ -10,6 +10,42 @@ the 'libflite' library by Alan W Black and Kevin A. Lenzo.
 
 'libflite' lives at https://github.com/festvox/flite
 
+
+# linking with libflite
+To produce a self-contained "flite" external (with no external dependencies
+on libflite), you can statically link the library.
+
+## git submodules
+The libflite sources are available via a git submodule in `deps/flite/`.
+
+After cloning the pd-flite repository, initialize the submodules via:
+
+    git submodule update --init
+
+If the submodule is updated, re-run `git submodule update` in your local
+clone to get the lastest and greatest libflite.
+
+## without git
+If you obtained the 'pd-flite' sources without git (e.g. by downloading a
+release tarball), there won't be any bundled libflite.
+Instead, you can manually download flite from https://github.com/festvox/flite
+and put it into the `deps/flite/` folder (so you have a
+deps/flite/include/flite.h file)
+
+## use system libraries
+
+If you prefer to use system-provided libflite instead (e.g. provided by
+your favourite package manager), just make sure that deps/flite/ is empty
+(by not initializing the git-submodules and not downloading libflite
+manually).
+If the build process does not detect the deps/flite/include/flite.h file,
+it will attempt to use a system-provided libflite instead.
+
+If you happen to have a local copy of libflite in the deps/ folder,
+you can force building against the system libraries by adding
+`use_bundled_flite=no` when calling *make*.
+
+
 # WINDOWS BUILD
 
 With MSYS2 install the ntldd package:
