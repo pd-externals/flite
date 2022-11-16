@@ -1,5 +1,10 @@
 Changelog for pd-flite
 
+v0.3.3, dated 16-11-2022
+
+- Remove flite sources (include them via gitmodules)
+- Allow building against system-installed libflite
+
 v0.3.2, dated 24-06-2022
 
 - Better thread coding

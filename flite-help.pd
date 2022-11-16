@@ -163,7 +163,7 @@ playing., f 46;
 it;
 #X msg 137 415 thrd_voice_file \$1;
 #X text 262 410 threaded version, f 9;
-#X text 412 630 v0.3.2 updated by Lucas Cordiviola https://github.com/Lucarda/pd-flite
+#X text 412 630 v0.3.3 updated by Lucas Cordiviola https://github.com/pd-externals/flite
 ;
 #X connect 8 0 59 0;
 #X connect 9 0 59 0;

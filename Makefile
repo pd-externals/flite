@@ -57,7 +57,7 @@ endif
 
 ldlibs += -lm -lpthread
 
-cflags += -I . -DVERSION='"0.3.2"'
+cflags += -I . -DVERSION='"0.3.3"'
 
 # input source file (class name == source file basename)
 flite.class.sources = flite.c

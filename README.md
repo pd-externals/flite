@@ -1,6 +1,6 @@
 README for Pd external distribution 'pd-flite'
 
-Last updated for version 0.3.2
+Last updated for version 0.3.3
 
 # DESCRIPTION
 
@@ -91,6 +91,6 @@ Bryan Jurish <moocow@ling.uni-potsdam.de>
 
 # MAINTENANCE 
 
-Since v0.3.0 Lucas Cordiviola https://github.com/Lucarda/pd-flite
+Since v0.3.0 Lucas Cordiviola https://github.com/pd-externals/flite
 
 - Thanks to Christof Ressi for code reviews.
