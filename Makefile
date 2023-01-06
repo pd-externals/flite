@@ -6,7 +6,6 @@
 lib.name = flite
 
 cflags =
-w32_cflags =
 
 BUNDLED_FLITE = ./deps/flite
 ifneq ($(wildcard $(BUNDLED_FLITE)/include/flite.h),)
@@ -19,22 +18,6 @@ cflags += \
 	-I$(BUNDLED_FLITE)/lang/cmulex \
 	-I$(BUNDLED_FLITE)/lang/usenglish \
 	$(empty)
-
-# urgh, this is ugly!
-# we cannot really statically link against flite on Windows,
-# as some global variables are declared with '__declspec(dllexport)'.
-# so we just disable the entire __declspec() magic here:
-w32_cflags += \
-	-D"__declspec(x)=" \
-	$(empty)
-
-# a much better approach is to just build a static version of flite,
-# but this requires https://github.com/festvox/flite/pull/84
-# to be merged first:
-w32_cflags += \
-	-DFLITE_STATIC=1 \
-	$(empty)
-
 else
 cflags += -DHAVE_FLITE_FLITE_H=1
 ldlibs += \
@@ -282,7 +265,6 @@ define forWindows
   cflags += \
 	-DCST_NO_SOCKETS \
 	-DUNDER_WINDOWS \
-	$(w32_cflags) \
 	$(empty)
   ldlibs +=
 endef

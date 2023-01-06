@@ -720,6 +720,11 @@ static void flite_free(t_flite *x) {
 /*--------------------------------------------------------------------
  * setup
  *--------------------------------------------------------------------*/
+ #if defined(_WIN32)
+__declspec(dllexport)
+#else
+__attribute__((visibility("default")))
+#endif
 void flite_setup(void) {
   post("");
   post(flite_description);
