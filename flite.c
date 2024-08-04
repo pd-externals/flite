@@ -664,6 +664,12 @@ static void flite_thread(t_flite *x) {
 #endif
   return;
 }
+static void*flite_do_thread(void *z)
+{
+  t_flite *x = (t_flite*)z;
+  flite_thread(x);
+  return 0;
+}
 
 /*--------------------------------------------------------------------
  * constructor 
@@ -693,7 +699,7 @@ static void *flite_new(t_symbol *ary)
   x->x_requestcode = IDLE;
   pthread_mutex_init(&x->x_mutex, 0);
   pthread_cond_init(&x->x_requestcondition, 0);
-  pthread_create(&x->x_tid, 0, flite_thread, x);
+  pthread_create(&x->x_tid, 0, flite_do_thread, x);
   
   return (void *)x;
 }
